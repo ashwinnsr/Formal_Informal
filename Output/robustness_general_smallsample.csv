@@ -1,2 +1,0 @@
-Test,t_stat,G,df_used,p_normal,p_t_G1,p_fixest,match
-"Small-sample df verification (ln_A_formal, outsourcing)",2.1628355182281234,26,25,0.03055383271048493,0.040317550444100625,0.040317550444100625,TRUE

@@ -1,2 +1,0 @@
-Test,Model,Coefficient,SE,P_value,N_obs,N_clusters,Interpretation
-Test 6: Persistence of Informality,lag_ln_N_informal + ln_A_formal + E_s | Year,0.903071012101247,0.046149518010802276,1.1307415141466712e-16,93,26,Strong path dependence (structural)

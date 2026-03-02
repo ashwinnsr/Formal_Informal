@@ -1,7 +1,0 @@
-Check,Priority,Status
-RQ1: Placebo (Chemicals NIC-20),Priority 1,✓ Run
-RQ2: Outlier exclusion,Priority 1,✓ Run
-RQ2: Median wage,Priority 2,✓ Run
-RQ3: Unit root (Balanced LLC & Fisher ADF),Priority 1 — CRITICAL,✓ Run
-RQ3: AR(2) lag structure,Priority 2,✓ Run
-General: Small-sample t correction,Verification,✓ Verified
