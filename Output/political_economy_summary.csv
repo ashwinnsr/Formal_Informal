@@ -1,0 +1,4 @@
+Mechanism,Test,Coefficient,P-value,Interpretation
+1. Monopsony Wage-Setting,Productivity → Informal Wages,-0.0141,0.610,✓ Monopsony (no pass-through)
+2. Adverse Incorporation,Productivity → N_informal Enterprises,-0.1416,0.257,Inconclusive
+3. Cost-Shifting (GVC),Outsourcing → Informal Wages,511.1706,0.550,Weak/No evidence

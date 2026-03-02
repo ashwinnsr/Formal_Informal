@@ -1,0 +1,7 @@
+Test,Coefficient,P_value,Structuralist_Prediction
+4: Asymmetric (β_inc),0.23832964355209973,NA,β_inc ≈ 0 (gains not shared)
+4: Asymmetric (β_dec),0.0589422743492512,NA,β_dec < 0 (losses passed down)
+5: Size → Outsourcing,-8.802846121245579e-6,0.5298483579712858,β > 0 (bigger firms outsource more)
+5: Size → Wages,-0.5199946403603128,0.13983620277455858,β < 0 (bigger firms pay less)
+7: Threshold (above),NA,NA,β(above) >> β(below) ≈ 0
+8: Concentration → Wages,0.023176502326996015,0.4845921979896186,β < 0 (fewer buyers → lower wages)

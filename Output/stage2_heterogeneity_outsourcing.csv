@@ -1,0 +1,33 @@
+
+\begingroup
+\centering
+\begin{tabular}{lcccc}
+   \tabularnewline \midrule \midrule
+   Dependent Variable: & \multicolumn{4}{c}{ln\_Q\_out}\\
+                   & Textiles                & Apparel                     & High E\_s                  & Low E\_s \\    
+   Model:          & (1)                     & (2)                         & (3)                        & (4)\\  
+   \midrule
+   \emph{Variables}\\
+   Constant        & $-3.54\times 10^{-5}$   & $-8.5\times 10^{-5}$$^{*}$  &                            &   \\   
+                   & ($2.61\times 10^{-5}$)  & ($4.19\times 10^{-5}$)      &                            &   \\   
+   E\_s            & $1.4\times 10^{-5}$     & $2.82\times 10^{-5}$        &                            &   \\   
+                   & ($2.61\times 10^{-5}$)  & ($3.32\times 10^{-5}$)      &                            &   \\   
+   I(I(E\_s\^2))   & $-1\times 10^{-5}$      & $-4.65\times 10^{-5}$       &                            &   \\   
+                   & ($2.09\times 10^{-5}$)  & ($4.44\times 10^{-5}$)      &                            &   \\   
+   ln\_A\_formal   & $2.61\times 10^{-6}$    & $6.46\times 10^{-6}$$^{*}$  & $7\times 10^{-6}$$^{***}$  & $1.6\times 10^{-6}$\\    
+                   & ($1.99\times 10^{-6}$)  & ($3.29\times 10^{-6}$)      & ($2.23\times 10^{-6}$)     & ($1.12\times 10^{-6}$)\\    
+   \midrule
+   \emph{Fixed-effects}\\
+   NIC\_2digit     &                         &                             & Yes                        & Yes\\  
+   \midrule
+   \emph{Fit statistics}\\
+   Observations    & 25                      & 22                          & 22                         & 25\\  
+   R$^2$           & 0.14162                 & 0.13332                     & 0.30914                    & 0.09312\\  
+   Within R$^2$    &                         &                             & 0.30908                    & 0.02030\\  
+   \midrule \midrule
+   \multicolumn{5}{l}{\emph{Clustered (State\_Code) standard-errors in parentheses}}\\
+   \multicolumn{5}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+\end{tabular}
+\par\endgroup
+
+

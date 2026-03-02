@@ -1,0 +1,34 @@
+
+\begingroup
+\centering
+\begin{tabular}{lccc}
+   \tabularnewline \midrule \midrule
+   Dependent Variable: & \multicolumn{3}{c}{ln\_N\_informal}\\
+                           & Base (Year FE) & NIC+Year FE    & w/ Formal Employment \\   
+   Model:                  & (1)            & (2)            & (3)\\  
+   \midrule
+   \emph{Variables}\\
+   lag\_ln\_N\_informal    & 0.9031$^{***}$ & 0.9011$^{***}$ & 0.8932$^{***}$\\   
+                           & (0.0461)       & (0.0471)       & (0.0405)\\   
+   ln\_A\_formal           & -0.0154        & -0.0235        & 0.0406\\   
+                           & (0.0312)       & (0.0434)       & (0.0312)\\   
+   E\_s                    & 0.1809         & 0.1381         & 0.2345\\   
+                           & (0.1844)       & (0.1702)       & (0.1694)\\   
+   ln\_L\_formal           &                &                & -0.0359$^{**}$\\   
+                           &                &                & (0.0165)\\   
+   \midrule
+   \emph{Fixed-effects}\\
+   Year                    & Yes            & Yes            & Yes\\  
+   NIC\_2digit             &                & Yes            & \\  
+   \midrule
+   \emph{Fit statistics}\\
+   Observations            & 93             & 93             & 93\\  
+   R$^2$                   & 0.76428        & 0.77172        & 0.77179\\  
+   Within R$^2$            & 0.76418        & 0.76944        & 0.77169\\  
+   \midrule \midrule
+   \multicolumn{4}{l}{\emph{Clustered (State\_Code) standard-errors in parentheses}}\\
+   \multicolumn{4}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+\end{tabular}
+\par\endgroup
+
+

@@ -1,0 +1,30 @@
+
+\begingroup
+\centering
+\begin{tabular}{lc}
+   \tabularnewline \midrule \midrule
+   Dependent Variable:                               & ln\_w\_inf\\    
+   Model:                                            & (1)\\  
+   \midrule
+   \emph{Variables}\\
+   E\_s                                              & -1.233$^{***}$\\   
+                                                     & (0.3632)\\   
+   ln\_A\_formal $\times$ as.integer(E\_s>=0.35)     & 0.0145\\   
+                                                     & (0.0257)\\   
+   ln\_A\_formal $\times$ as.integer(E\_s<0.35)      & -0.0157\\   
+                                                     & (0.0214)\\   
+   \midrule
+   \emph{Fixed-effects}\\
+   NIC\_2digit                                       & Yes\\  
+   \midrule
+   \emph{Fit statistics}\\
+   Observations                                      & 141\\  
+   R$^2$                                             & 0.10135\\  
+   Within R$^2$                                      & 0.09924\\  
+   \midrule \midrule
+   \multicolumn{2}{l}{\emph{Clustered (State\_Code) standard-errors in parentheses}}\\
+   \multicolumn{2}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+\end{tabular}
+\par\endgroup
+
+

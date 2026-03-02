@@ -1,0 +1,50 @@
+# Data (Microdata and large raw files)
+ASI_Data/
+ASUSE_Data/
+Data/
+*.csv
+!Output/*.csv
+!Scripts/*.csv
+
+# R Project Files
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+R_libs/
+
+# LaTeX Auxiliary Files
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+*.run.xml
+*.bcf
+*.tex 
+
+# PDFs (Ignore all, except final dissertation/presentation)
+*.pdf
+!MA_Dissertation/*.pdf
+!Presentation/*.pdf
+
+# Logs and Temp Files
+*.txt
+!README*.md
+!Docs/*.md
+!*.tex
+stage1_robustness_debug.log
+analysis_log.txt
+tmp_vars_output.txt
+tmp_vars_output_2.txt
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+Stage2_SMM.r
