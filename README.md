@@ -2,9 +2,6 @@
 ### Labor Institutions and Surplus Distribution in India's Textile Value Chains
 
 **Author**: Ashwin  
-**Supervisor**: Dr. Rajeev Bhattacharyya  
-**Institution**: MS in Public Policy  
-**Date**: March 2026
 
 ---
 
