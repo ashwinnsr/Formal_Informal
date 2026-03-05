@@ -1,0 +1,94 @@
+% main.tex
+\documentclass[12pt,a4paper]{report}
+
+% ========== ENCODING & FONTS ==========
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{mathptmx}
+\usepackage{helvet}
+
+% ========== PAGE LAYOUT ==========
+\usepackage[a4paper, margin=1in]{geometry}
+\usepackage{setspace}
+\doublespacing
+\usepackage{indentfirst} % Ensures first paragraph is indented
+\setlength{\parindent}{0.5in} % 0.5 inch paragraph indent (APA standard)
+
+
+% ========== ESSENTIAL PACKAGES ==========
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+\usepackage{booktabs, array}
+\usepackage{tikz} 
+\usetikzlibrary{shapes.geometric, arrows, positioning}
+\usepackage{tabularray}
+\usepackage{float}
+
+% ========== BIBLIOGRAPHY ==========
+\usepackage[backend=biber, style=authoryear]{biblatex}
+\addbibresource{references.bib}
+
+% ========== CUSTOM STYLE ==========
+\usepackage{styles/mydissertation}
+
+% ========== HYPERREF - MUST BE LAST ==========
+\usepackage[hidelinks]{hyperref}
+\hypersetup{
+	colorlinks=true,
+	citecolor=blue,
+	linkcolor=black,
+	urlcolor=blue,
+	bookmarksopen=true
+}
+
+\begin{document}
+	
+	% FRONT MATTER
+	\pagenumbering{roman}
+	\setcounter{page}{1}
+	
+	\input{frontmatter/titlepage}
+	\input{frontmatter/abstract}
+	
+	\tableofcontents
+	\listoftables
+	\listoffigures
+	
+	% MAIN BODY
+	\cleardoublepage
+	\pagenumbering{arabic}
+	\setcounter{page}{1}
+	
+	\begin{abstract}
+		\input{frontmatter/abstract}\\
+		\vspace{0.5 cm}
+		
+		\noindent \textbf{Keywords}: Informal Sector, Formal-Informal Linkages, Bargaining Power, Labor Institutions, Value Chains, Monopsony, Indian Manufacturing, Textile Industry, Political Economy.
+	\end{abstract}
+	
+	
+	% chapters
+	\include{chapters/01_introduction}
+	\include{chapters/02_literature}
+	\include{chapters/03_theory}
+	\include{chapters/04_methodology}  
+	\include{chapters/05_results}
+	\include{chapters/06_discussion}
+	\include{chapters/07_conclusion}
+	
+	% REFERENCES
+    \printbibliography
+    
+    
+	% APPENDICES
+	\appendix
+	\include{appendices/appendixA}
+	\include{appendices/appendixB}
+	\include{appendices/appendixC}
+	\include{chapters/appendixD_identification}
+	
+
+    
+	
+\end{document}

@@ -10,8 +10,8 @@
 #   Test 7: Threshold Effects         (enforcement de-institutionalisation)
 #   Test 8: Buyer Concentration       (monopsony power)
 #
-# Reads: Output/multiyear_master_df.csv
-# Writes: Output/appendix_test*.tex/.csv, Output/figure_appendix_*.png
+# Reads: Output/csv/multiyear_master_df.csv
+# Writes: Output/tex/appendix_test*.tex/.csv, Output/images/figure_appendix_*.png
 ################################################################################
 
 .libPaths(c("R_libs", .libPaths()))
@@ -35,12 +35,14 @@ cat("================================================================\n\n")
 # =============================================================================
 # LOAD DATA
 # =============================================================================
-
-master_df <- read_csv("Output/multiyear_master_df.csv", show_col_types = FALSE) %>%
+# LOAD DATA
+master_df <- read_csv("Output/csv/combined_longrun_df.csv", show_col_types = FALSE) %>%
     mutate(
         NIC_2digit = as.factor(NIC_2digit),
         Year_char = as.character(Year),
         Year_num = case_when(
+            Year_char == "2010-11" ~ 2010L,
+            Year_char == "2015-16" ~ 2015L,
             Year_char == "2021-22" ~ 2021L,
             Year_char == "2022-23" ~ 2022L,
             Year_char == "2023-24" ~ 2023L,
@@ -140,7 +142,7 @@ if (!is.na(b_inc) && !is.na(b_dec)) {
 
 # Export
 if (!is.null(mod_asymmetric)) {
-    etable(mod_asymmetric, tex = TRUE, file = "Output/appendix_test4_asymmetric.tex")
+    etable(mod_asymmetric, tex = TRUE, file = "Output/tex/appendix_test4_asymmetric.tex")
 }
 write_csv(
     tibble(
@@ -149,7 +151,7 @@ write_csv(
         N_obs = nrow(master_df_panel),
         Note = "3-year panel; ~2 deltas/cell; low power"
     ),
-    "Output/appendix_test4_asymmetric.csv"
+    "Output/csv/appendix_test4_asymmetric.csv"
 )
 
 # Visualization
@@ -181,8 +183,8 @@ if (!is.na(b_inc) && !is.na(b_dec)) {
         theme_minimal(base_size = 13) +
         theme(plot.title = element_text(face = "bold"))
 
-    ggsave("Output/figure_appendix_test4_asymmetric.png", p_t4, width = 7, height = 5, dpi = 300)
-    cat("Figure saved: Output/figure_appendix_test4_asymmetric.png\n")
+    ggsave("Output/images/figure_appendix_test4_asymmetric.png", p_t4, width = 7, height = 5, dpi = 300)
+    cat("Figure saved: Output/images/figure_appendix_test4_asymmetric.png\n")
 }
 cat("\n")
 
@@ -228,7 +230,7 @@ if (b_size_out > 0 && b_size_wage < 0) {
     cat("\n→ INCONCLUSIVE / MIXED results\n")
 }
 
-etable(mod_size_outsourcing, mod_size_wages, tex = TRUE, file = "Output/appendix_test5_firmsize.tex")
+etable(mod_size_outsourcing, mod_size_wages, tex = TRUE, file = "Output/tex/appendix_test5_firmsize.tex")
 write_csv(
     tibble(
         Test = "Test 5: Firm Size",
@@ -236,7 +238,7 @@ write_csv(
         b_size_wages = b_size_wage, p_size_wages = p_size_wage,
         N_obs = nrow(master_df_t5)
     ),
-    "Output/appendix_test5_firmsize.csv"
+    "Output/csv/appendix_test5_firmsize.csv"
 )
 
 p5a <- ggplot(master_df_t5, aes(x = ln_firm_size, y = ln_Q_out)) +
@@ -267,11 +269,11 @@ p5b <- ggplot(master_df_t5, aes(x = ln_firm_size, y = ln_w_inf)) +
     ) +
     theme_minimal(base_size = 12)
 
-ggsave("Output/figure_appendix_test5_firmsize.png",
+ggsave("Output/images/figure_appendix_test5_firmsize.png",
     (p5a | p5b) + plot_annotation(title = "Test 5: Firm Size & Exploitation (Appendix C)"),
     width = 11, height = 5, dpi = 300
 )
-cat("Figure saved: Output/figure_appendix_test5_firmsize.png\n\n")
+cat("Figure saved: Output/images/figure_appendix_test5_firmsize.png\n\n")
 
 
 # =============================================================================
@@ -329,7 +331,7 @@ mod_threshold <- tryCatch(
 if (!is.null(mod_threshold)) {
     cat("--- Optimal-Threshold Piecewise Model ---\n")
     etable(mod_threshold)
-    etable(mod_threshold, tex = TRUE, file = "Output/appendix_test7_threshold.tex")
+    etable(mod_threshold, tex = TRUE, file = "Output/tex/appendix_test7_threshold.tex")
 }
 
 write_csv(
@@ -337,7 +339,7 @@ write_csv(
         Threshold = thresholds, R_squared = r2_grid,
         Is_Optimal = thresholds == optimal_threshold
     ),
-    "Output/appendix_test7_threshold.csv"
+    "Output/csv/appendix_test7_threshold.csv"
 )
 
 # Visualization: R² grid
@@ -361,8 +363,8 @@ p7 <- ggplot(tibble(Threshold = thresholds, R2 = r2_grid), aes(x = Threshold, y 
     theme_minimal(base_size = 13) +
     theme(plot.title = element_text(face = "bold"))
 
-ggsave("Output/figure_appendix_test7_threshold.png", p7, width = 7, height = 5, dpi = 300)
-cat("Figure saved: Output/figure_appendix_test7_threshold.png\n\n")
+ggsave("Output/images/figure_appendix_test7_threshold.png", p7, width = 7, height = 5, dpi = 300)
+cat("Figure saved: Output/images/figure_appendix_test7_threshold.png\n\n")
 
 
 # =============================================================================
@@ -405,14 +407,14 @@ if (b_conc < 0 && p_conc < 0.10) {
 }
 
 etable(mod_concentration_simple, mod_concentration,
-    tex = TRUE, file = "Output/appendix_test8_concentration.tex"
+    tex = TRUE, file = "Output/tex/appendix_test8_concentration.tex"
 )
 write_csv(
     tibble(
         Test = "Test 8: Buyer Concentration",
         b_concentration = b_conc, p_concentration = p_conc, N_obs = nrow(master_df_t8)
     ),
-    "Output/appendix_test8_concentration.csv"
+    "Output/csv/appendix_test8_concentration.csv"
 )
 
 p8 <- ggplot(master_df_t8, aes(x = ln_concentration, y = ln_w_inf)) +
@@ -432,8 +434,8 @@ p8 <- ggplot(master_df_t8, aes(x = ln_concentration, y = ln_w_inf)) +
     theme_minimal(base_size = 13) +
     theme(plot.title = element_text(face = "bold"))
 
-ggsave("Output/figure_appendix_test8_concentration.png", p8, width = 9, height = 6, dpi = 300)
-cat("Figure saved: Output/figure_appendix_test8_concentration.png\n\n")
+ggsave("Output/images/figure_appendix_test8_concentration.png", p8, width = 9, height = 6, dpi = 300)
+cat("Figure saved: Output/images/figure_appendix_test8_concentration.png\n\n")
 
 
 # =============================================================================
@@ -474,7 +476,7 @@ appendix_summary <- tibble(
 )
 
 print(appendix_summary, n = Inf)
-write_csv(appendix_summary, "Output/appendix_summary_tests4578.csv")
+write_csv(appendix_summary, "Output/csv/appendix_summary_tests4578.csv")
 
 cat("\nAll appendix results saved to Output/. For dissertation, reference as Appendix C.\n")
 cat("\n================================================================\n")

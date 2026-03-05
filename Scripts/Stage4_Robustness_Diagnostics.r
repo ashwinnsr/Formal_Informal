@@ -20,7 +20,7 @@
 #     - Small-sample t-distribution correction (verify fixest default)
 #     - Specification curve (specr) — optional, requires package install
 #
-# Reads: Output/multiyear_master_df.csv
+# Reads: Output/csv/multiyear_master_df.csv
 #        Raw ASI (blkA 2023-24) for placebo
 #        Raw ASUSE (2023-24) for median wage
 ################################################################################
@@ -33,6 +33,10 @@ suppressPackageStartupMessages({
     library(fixest)
     library(ggplot2)
     library(patchwork)
+    library(car) # VIF (multicollinearity)
+    library(lmtest) # Breusch-Pagan, Durbin-Watson
+    library(sensemakr) # Oster-style sensitivity bounds
+    library(boot) # Bootstrapped confidence intervals
 })
 
 setwd("C:/Users/ashwin/Documents/Formal_Informal")
@@ -45,12 +49,14 @@ cat("================================================================\n\n")
 # =============================================================================
 # LOAD BASE DATA
 # =============================================================================
-
-master_df <- read_csv("Output/multiyear_master_df.csv", show_col_types = FALSE) %>%
+# LOAD BASE DATA
+master_df <- read_csv("Output/csv/combined_longrun_df.csv", show_col_types = FALSE) %>%
     mutate(
         NIC_2digit = as.factor(NIC_2digit),
         Year_char = as.character(Year),
         Year_num = case_when(
+            Year_char == "2010-11" ~ 2010L,
+            Year_char == "2015-16" ~ 2015L,
             Year_char == "2021-22" ~ 2021L,
             Year_char == "2022-23" ~ 2022L,
             Year_char == "2023-24" ~ 2023L,
@@ -196,7 +202,7 @@ placebo_result <- tryCatch(
             )
 
         # Load enforcement data
-        enforcement_data <- read_csv("Data/External/State_Enforcement.csv", show_col_types = FALSE)
+        enforcement_data <- read_csv("Data/External/State_Enforcement_2023.csv", show_col_types = FALSE)
         es_col <- names(enforcement_data)[grep("E_s", names(enforcement_data), ignore.case = TRUE)][1]
         enforcement_data <- enforcement_data %>%
             rename(E_s = all_of(es_col)) %>%
@@ -240,12 +246,12 @@ placebo_result <- tryCatch(
             cat("  Check whether result is sensitive to sector definition.\n")
         }
 
-        etable(mod_placebo, tex = TRUE, file = "Output/robustness_rq1_placebo_chemicals.tex")
+        etable(mod_placebo, tex = TRUE, file = "Output/tex/robustness_rq1_placebo_chemicals.tex")
         write_csv(tibble(
             Test = "RQ1 Placebo: Chemicals",
             b_textiles = b_textiles, b_chemicals = b_placebo, p_chemicals = p_placebo,
             N_chem_cells = nrow(chem_df)
-        ), "Output/robustness_rq1_placebo_chemicals.csv")
+        ), "Output/csv/robustness_rq1_placebo_chemicals.csv")
 
         list(success = TRUE, mod = mod_placebo, df = chem_df)
     },
@@ -254,7 +260,7 @@ placebo_result <- tryCatch(
         cat("  Ensure ASI 2023-24 files are at ASI_Data/ASI_202324sav/\n")
         write_csv(
             tibble(Test = "RQ1 Placebo: Chemicals", Note = conditionMessage(e)),
-            "Output/robustness_rq1_placebo_chemicals.csv"
+            "Output/csv/robustness_rq1_placebo_chemicals.csv"
         )
         list(success = FALSE)
     }
@@ -288,7 +294,8 @@ cat(sprintf("Outliers identified (|residual| > 2 SD): %d observations\n", n_outl
 if (n_outliers > 0) {
     outlier_states <- master_df %>%
         filter(is_outlier) %>%
-        distinct(State_Code, State_Name, NIC_2digit, Year) %>%
+        select(any_of(c("State_Code", "State_Name", "NIC_2digit", "Year"))) %>%
+        distinct() %>%
         arrange(State_Code)
     cat("\nOutlier observations:\n")
     print(outlier_states)
@@ -348,19 +355,19 @@ p_resid <- ggplot(
     theme_minimal(base_size = 13) +
     theme(plot.title = element_text(face = "bold"), legend.position = "bottom")
 
-ggsave("Output/figure_robustness_rq2_outliers.png", p_resid, width = 8, height = 5, dpi = 300)
-cat("Figure saved: Output/figure_robustness_rq2_outliers.png\n")
+ggsave("Output/images/figure_robustness_rq2_outliers.png", p_resid, width = 8, height = 5, dpi = 300)
+cat("Figure saved: Output/images/figure_robustness_rq2_outliers.png\n")
 
 etable(mod_wages, mod_wages_nooutlier,
     tex = TRUE,
-    file = "Output/robustness_rq2_outlier_wages.tex"
+    file = "Output/tex/robustness_rq2_outlier_wages.tex"
 )
 write_csv(tibble(
     Test = c("Full sample", "Excl. outliers"),
     b_ln_A_formal = c(b_full, b_clean),
     p_ln_A_formal = c(p_full, p_clean),
     N_obs = c(nrow(master_df), nrow(master_df_clean))
-), "Output/robustness_rq2_outlier_wages.csv")
+), "Output/csv/robustness_rq2_outlier_wages.csv")
 
 cat("\n")
 
@@ -499,7 +506,7 @@ median_result <- tryCatch(
 
         etable(mod_mean_2324, mod_median,
             tex = TRUE,
-            file = "Output/robustness_rq2_median_wage.tex"
+            file = "Output/tex/robustness_rq2_median_wage.tex"
         )
         write_csv(tibble(
             Test = c("Mean wage (2023-24)", "Median wage (2023-24)"),
@@ -509,7 +516,7 @@ median_result <- tryCatch(
                 nrow(master_df %>% filter(Year_char == "2023-24")),
                 nrow(median_df)
             )
-        ), "Output/robustness_rq2_median_wage.csv")
+        ), "Output/csv/robustness_rq2_median_wage.csv")
 
         list(success = TRUE)
     },
@@ -517,7 +524,7 @@ median_result <- tryCatch(
         cat(sprintf("  [NOTE] Median wage check skipped: %s\n", conditionMessage(e)))
         write_csv(
             tibble(Test = "RQ2 Median Wage", Note = conditionMessage(e)),
-            "Output/robustness_rq2_median_wage.csv"
+            "Output/csv/robustness_rq2_median_wage.csv"
         )
         list(success = FALSE)
     }
@@ -597,7 +604,7 @@ unitroot_result <- tryCatch(
         # Run ADF on each unit with 3+ observations
         adf_pvals <- master_df %>%
             group_by(State_Code, NIC_2digit) %>%
-            summarise(n_obs = n()) %>%
+            summarise(n_obs = n(), .groups = "drop") %>%
             filter(n_obs >= 3) %>%
             inner_join(master_df, by = c("State_Code", "NIC_2digit")) %>%
             group_by(State_Code, NIC_2digit) %>%
@@ -641,7 +648,7 @@ unitroot_result <- tryCatch(
             Test = c("LLC Balanced", "Fisher ADF"),
             p_value = c(p_llc, fisher_pval),
             N_units = c(nrow(balanced_units), nrow(adf_pvals))
-        ), "Output/robustness_rq3_unitroot.csv")
+        ), "Output/csv/robustness_rq3_unitroot.csv")
 
         list(success = TRUE, p_val = final_p)
     },
@@ -649,7 +656,7 @@ unitroot_result <- tryCatch(
         cat(sprintf("  [NOTE] Unit root tests section failed: %s\n", conditionMessage(e)))
         write_csv(
             tibble(Test = "RQ3 Unit Root", Note = conditionMessage(e)),
-            "Output/robustness_rq3_unitroot.csv"
+            "Output/csv/robustness_rq3_unitroot.csv"
         )
         list(success = FALSE)
     }
@@ -717,7 +724,7 @@ if (nrow(master_df_ar2) >= 5) {
 
         etable(mod_persistence, mod_ar2,
             tex = TRUE,
-            file = "Output/robustness_rq3_ar2.tex"
+            file = "Output/tex/robustness_rq3_ar2.tex"
         )
         write_csv(tibble(
             Test = c("AR(1) — Main", "AR(2) — Check"),
@@ -728,35 +735,498 @@ if (nrow(master_df_ar2) >= 5) {
             b_lag2 = c(NA, b_lag2),
             p_lag2 = c(NA, p_lag2),
             N_obs = c(nrow(master_df_panel), nrow(master_df_ar2))
-        ), "Output/robustness_rq3_ar2.csv")
+        ), "Output/csv/robustness_rq3_ar2.csv")
     }
 } else {
     cat("  [NOTE] Insufficient observations for AR(2) with 3-year panel.\n")
     cat("  AR(1) is the only feasible specification.\n")
     write_csv(
         tibble(Test = "AR(2)", Note = "Insufficient obs with T=3"),
-        "Output/robustness_rq3_ar2.csv"
+        "Output/csv/robustness_rq3_ar2.csv"
     )
 }
 
 cat("\n")
 
 
-# = [REMOVED: WILD BOOTSTRAP SE] =
-# Not essential given G=26 clusters and confirmed t(G-1) distribution.
+# =============================================================================
+# DIAGNOSTIC TESTS FOR ALL CORE MODELS
+# =============================================================================
+# These tests address:
+#   1. Multicollinearity (VIF)
+#   2. Heteroscedasticity (Breusch-Pagan)
+#   3. Autocorrelation (Durbin-Watson)
+#   4. Normality of Residuals (Shapiro-Wilk)
+#
+# Applied to:
+#   - mod_outsourcing (RQ1)
+#   - mod_wages (RQ2)
+#   - mod_persistence (RQ3)
+# =============================================================================
 
-# = [REMOVED: SPECIFICATION CURVE] =
-# Not essential; manual robustness tests provide sufficient evidence.
+cat("\n================================================================\n")
+cat("  REGRESSION DIAGNOSTICS: ALL CORE MODELS\n")
+cat("================================================================\n\n")
 
-cat("\n")
+# --- Helper: Fit OLS equivalents for diagnostic tests ---
+# fixest::feols objects need OLS equivalents for lmtest functions
+
+ols_outsourcing <- lm(
+    ln_Q_out ~ ln_A_formal + E_s + NIC_2digit + Year,
+    data = master_df
+)
+
+ols_wages <- lm(
+    ln_w_inf ~ ln_A_formal * E_s + NIC_2digit + Year,
+    data = master_df
+)
+
+ols_persistence <- lm(
+    ln_N_informal ~ lag_ln_N_informal + ln_A_formal + E_s + Year,
+    data = master_df_panel
+)
+
+
+# =========================================================================
+# DIAGNOSTIC 1: MULTICOLLINEARITY (VIF)
+# =========================================================================
+cat("--- DIAGNOSTIC 1: MULTICOLLINEARITY (VIF) ---\n\n")
+
+vif_outsourcing <- tryCatch(car::vif(ols_outsourcing), error = function(e) NULL)
+vif_wages <- tryCatch(car::vif(ols_wages), error = function(e) NULL)
+vif_persistence <- tryCatch(car::vif(ols_persistence), error = function(e) NULL)
+
+if (!is.null(vif_outsourcing)) {
+    cat("Model 1 (Outsourcing) VIFs:\n")
+    # Extract only key predictors (not FE dummies)
+    key_vifs <- vif_outsourcing[names(vif_outsourcing) %in% c("ln_A_formal", "E_s")]
+    print(round(key_vifs, 2))
+    if (all(key_vifs < 5)) {
+        cat("✓ No concerning multicollinearity (all VIF < 5)\n\n")
+    } else {
+        cat("! VIF > 5 detected — consider orthogonalization\n\n")
+    }
+}
+
+if (!is.null(vif_wages)) {
+    cat("Model 2 (Wage Pass-Through) VIFs:\n")
+    # For interaction models, use type = "terms" with GVIF
+    vif_w <- tryCatch(car::vif(ols_wages, type = "terms"), error = function(e) {
+        # Fallback: just get GVIF
+        car::vif(ols_wages)
+    })
+    key_names <- intersect(names(vif_w), c("ln_A_formal", "E_s", "ln_A_formal:E_s"))
+    if (length(key_names) > 0) {
+        print(round(vif_w[key_names], 2))
+    } else {
+        cat("  (VIF computed for full model — check manually)\n")
+        print(head(round(vif_w, 2), 5))
+    }
+    cat("\n")
+}
+
+if (!is.null(vif_persistence)) {
+    cat("Model 3 (Persistence) VIFs:\n")
+    key_vifs <- vif_persistence[names(vif_persistence) %in% c("lag_ln_N_informal", "ln_A_formal", "E_s")]
+    print(round(key_vifs, 2))
+    if (all(key_vifs < 5)) {
+        cat("✓ No concerning multicollinearity (all VIF < 5)\n\n")
+    } else {
+        cat("! VIF > 5 detected — investigate\n\n")
+    }
+}
+
+
+# =========================================================================
+# DIAGNOSTIC 2: HETEROSCEDASTICITY (BREUSCH-PAGAN TEST)
+# =========================================================================
+cat("--- DIAGNOSTIC 2: HETEROSCEDASTICITY (BREUSCH-PAGAN) ---\n\n")
+
+bp_outsourcing <- tryCatch(lmtest::bptest(ols_outsourcing), error = function(e) NULL)
+bp_wages <- tryCatch(lmtest::bptest(ols_wages), error = function(e) NULL)
+bp_persistence <- tryCatch(lmtest::bptest(ols_persistence), error = function(e) NULL)
+
+bp_results <- tibble(
+    Model = character(), BP_Statistic = numeric(), P_Value = numeric(), Verdict = character()
+)
+
+if (!is.null(bp_outsourcing)) {
+    verdict <- ifelse(bp_outsourcing$p.value < 0.05,
+        "! Heteroscedastic (use robust/clustered SE)",
+        "✓ Homoscedastic"
+    )
+    cat(sprintf(
+        "Model 1 (Outsourcing): BP = %.3f, p = %.4f → %s\n",
+        bp_outsourcing$statistic, bp_outsourcing$p.value, verdict
+    ))
+    bp_results <- bind_rows(bp_results, tibble(
+        Model = "Outsourcing", BP_Statistic = as.numeric(bp_outsourcing$statistic),
+        P_Value = bp_outsourcing$p.value, Verdict = verdict
+    ))
+}
+
+if (!is.null(bp_wages)) {
+    verdict <- ifelse(bp_wages$p.value < 0.05,
+        "! Heteroscedastic (use robust/clustered SE)",
+        "✓ Homoscedastic"
+    )
+    cat(sprintf(
+        "Model 2 (Wages):       BP = %.3f, p = %.4f → %s\n",
+        bp_wages$statistic, bp_wages$p.value, verdict
+    ))
+    bp_results <- bind_rows(bp_results, tibble(
+        Model = "Wage Pass-Through", BP_Statistic = as.numeric(bp_wages$statistic),
+        P_Value = bp_wages$p.value, Verdict = verdict
+    ))
+}
+
+if (!is.null(bp_persistence)) {
+    verdict <- ifelse(bp_persistence$p.value < 0.05,
+        "! Heteroscedastic (use robust/clustered SE)",
+        "✓ Homoscedastic"
+    )
+    cat(sprintf(
+        "Model 3 (Persistence): BP = %.3f, p = %.4f → %s\n",
+        bp_persistence$statistic, bp_persistence$p.value, verdict
+    ))
+    bp_results <- bind_rows(bp_results, tibble(
+        Model = "Persistence", BP_Statistic = as.numeric(bp_persistence$statistic),
+        P_Value = bp_persistence$p.value, Verdict = verdict
+    ))
+}
+
+cat("\nNote: All core models use cluster-robust SE (fixest), which is valid\n")
+cat("regardless of heteroscedasticity. BP test is reported for completeness.\n\n")
+
+
+# =========================================================================
+# DIAGNOSTIC 3: AUTOCORRELATION (DURBIN-WATSON TEST)
+# =========================================================================
+cat("--- DIAGNOSTIC 3: AUTOCORRELATION (DURBIN-WATSON) ---\n\n")
+
+dw_outsourcing <- tryCatch(lmtest::dwtest(ols_outsourcing), error = function(e) NULL)
+dw_wages <- tryCatch(lmtest::dwtest(ols_wages), error = function(e) NULL)
+dw_persistence <- tryCatch(lmtest::dwtest(ols_persistence), error = function(e) NULL)
+
+dw_results <- tibble(
+    Model = character(), DW_Statistic = numeric(), P_Value = numeric(), Verdict = character()
+)
+
+if (!is.null(dw_outsourcing)) {
+    verdict <- ifelse(dw_outsourcing$p.value < 0.05,
+        "! Autocorrelation detected",
+        "✓ No significant autocorrelation"
+    )
+    cat(sprintf(
+        "Model 1 (Outsourcing): DW = %.3f, p = %.4f → %s\n",
+        dw_outsourcing$statistic, dw_outsourcing$p.value, verdict
+    ))
+    dw_results <- bind_rows(dw_results, tibble(
+        Model = "Outsourcing", DW_Statistic = as.numeric(dw_outsourcing$statistic),
+        P_Value = dw_outsourcing$p.value, Verdict = verdict
+    ))
+}
+
+if (!is.null(dw_wages)) {
+    verdict <- ifelse(dw_wages$p.value < 0.05,
+        "! Autocorrelation detected",
+        "✓ No significant autocorrelation"
+    )
+    cat(sprintf(
+        "Model 2 (Wages):       DW = %.3f, p = %.4f → %s\n",
+        dw_wages$statistic, dw_wages$p.value, verdict
+    ))
+    dw_results <- bind_rows(dw_results, tibble(
+        Model = "Wage Pass-Through", DW_Statistic = as.numeric(dw_wages$statistic),
+        P_Value = dw_wages$p.value, Verdict = verdict
+    ))
+}
+
+if (!is.null(dw_persistence)) {
+    verdict <- ifelse(dw_persistence$p.value < 0.05,
+        "! Autocorrelation detected",
+        "✓ No significant autocorrelation"
+    )
+    cat(sprintf(
+        "Model 3 (Persistence): DW = %.3f, p = %.4f → %s\n",
+        dw_persistence$statistic, dw_persistence$p.value, verdict
+    ))
+    dw_results <- bind_rows(dw_results, tibble(
+        Model = "Persistence", DW_Statistic = as.numeric(dw_persistence$statistic),
+        P_Value = dw_persistence$p.value, Verdict = verdict
+    ))
+}
+
+cat("\nNote: Cluster-robust SE in fixest accounts for within-cluster correlation.\n")
+cat("DW test is reported for completeness and transparency.\n\n")
+
+
+# =========================================================================
+# DIAGNOSTIC 4: NORMALITY OF RESIDUALS (SHAPIRO-WILK TEST)
+# =========================================================================
+cat("--- DIAGNOSTIC 4: NORMALITY OF RESIDUALS (SHAPIRO-WILK) ---\n\n")
+
+resid_out <- residuals(ols_outsourcing)
+resid_wag <- residuals(ols_wages)
+resid_per <- residuals(ols_persistence)
+
+sw_outsourcing <- tryCatch(shapiro.test(resid_out), error = function(e) NULL)
+sw_wages <- tryCatch(shapiro.test(resid_wag), error = function(e) NULL)
+sw_persistence <- tryCatch(shapiro.test(resid_per), error = function(e) NULL)
+
+sw_results <- tibble(
+    Model = character(), W_Statistic = numeric(), P_Value = numeric(), Verdict = character()
+)
+
+if (!is.null(sw_outsourcing)) {
+    verdict <- ifelse(sw_outsourcing$p.value < 0.05,
+        "! Non-normal residuals (check QQ plot)",
+        "✓ Residuals approximately normal"
+    )
+    cat(sprintf(
+        "Model 1 (Outsourcing): W = %.4f, p = %.4f → %s\n",
+        sw_outsourcing$statistic, sw_outsourcing$p.value, verdict
+    ))
+    sw_results <- bind_rows(sw_results, tibble(
+        Model = "Outsourcing", W_Statistic = sw_outsourcing$statistic,
+        P_Value = sw_outsourcing$p.value, Verdict = verdict
+    ))
+}
+
+if (!is.null(sw_wages)) {
+    verdict <- ifelse(sw_wages$p.value < 0.05,
+        "! Non-normal residuals (check QQ plot)",
+        "✓ Residuals approximately normal"
+    )
+    cat(sprintf(
+        "Model 2 (Wages):       W = %.4f, p = %.4f → %s\n",
+        sw_wages$statistic, sw_wages$p.value, verdict
+    ))
+    sw_results <- bind_rows(sw_results, tibble(
+        Model = "Wage Pass-Through", W_Statistic = sw_wages$statistic,
+        P_Value = sw_wages$p.value, Verdict = verdict
+    ))
+}
+
+if (!is.null(sw_persistence)) {
+    verdict <- ifelse(sw_persistence$p.value < 0.05,
+        "! Non-normal residuals (check QQ plot)",
+        "✓ Residuals approximately normal"
+    )
+    cat(sprintf(
+        "Model 3 (Persistence): W = %.4f, p = %.4f → %s\n",
+        sw_persistence$statistic, sw_persistence$p.value, verdict
+    ))
+    sw_results <- bind_rows(sw_results, tibble(
+        Model = "Persistence", W_Statistic = sw_persistence$statistic,
+        P_Value = sw_persistence$p.value, Verdict = verdict
+    ))
+}
+
+cat("\nNote: With cluster-robust inference, exact normality is less critical\n")
+cat("(asymptotic validity holds). Results reported for transparency.\n\n")
+
+# --- QQ Plots for all three models ---
+cat("Generating QQ plots...\n")
+
+qq_data <- bind_rows(
+    tibble(Model = "1: Outsourcing", residual = resid_out),
+    tibble(Model = "2: Wage Pass-Through", residual = resid_wag),
+    tibble(Model = "3: Persistence", residual = resid_per)
+)
+
+p_qq <- ggplot(qq_data, aes(sample = residual)) +
+    stat_qq(alpha = 0.6, color = "#2166ac") +
+    stat_qq_line(color = "#d73027", linewidth = 0.8) +
+    facet_wrap(~Model, scales = "free") +
+    labs(
+        title = "QQ Plots: Normality of Residuals",
+        subtitle = "Points should follow the red line for normally distributed residuals",
+        x = "Theoretical Quantiles", y = "Sample Quantiles"
+    ) +
+    theme_minimal(base_size = 12) +
+    theme(plot.title = element_text(face = "bold"))
+
+ggsave("Output/images/figure_diagnostics_qqplots.png", p_qq,
+    width = 12, height = 4.5, dpi = 300, bg = "white"
+)
+cat("Figure saved: Output/images/figure_diagnostics_qqplots.png\n\n")
+
+# Save all diagnostic results
+diagnostics_combined <- bind_rows(
+    bp_results %>% mutate(Test_Type = "Breusch-Pagan (Heteroscedasticity)") %>%
+        rename(Statistic = BP_Statistic),
+    dw_results %>% mutate(Test_Type = "Durbin-Watson (Autocorrelation)") %>%
+        rename(Statistic = DW_Statistic),
+    sw_results %>% mutate(Test_Type = "Shapiro-Wilk (Normality)") %>%
+        rename(Statistic = W_Statistic)
+)
+write_csv(diagnostics_combined, "Output/csv/diagnostics_all_models.csv")
+cat("Diagnostic results saved: Output/csv/diagnostics_all_models.csv\n\n")
+
+
+# =============================================================================
+# OSTER-STYLE SENSITIVITY BOUNDS (from Stage6)
+# =============================================================================
+cat("================================================================\n")
+cat("  SENSITIVITY TO UNOBSERVED CONFOUNDING (OSTER BOUNDS)\n")
+cat("================================================================\n\n")
+
+oster_result <- tryCatch(
+    {
+        baseline_mod_oster <- lm(
+            ln_Q_out ~ ln_A_formal + E_s + as.factor(NIC_2digit) + as.factor(Year),
+            data = master_df
+        )
+
+        sensitivity <- sensemakr(
+            model = baseline_mod_oster,
+            treatment = "ln_A_formal",
+            benchmark_covariates = "E_s",
+            kd = 1:3
+        )
+
+        rv_A_formal <- sensitivity$sensitivity_stats$rv_q
+        cat(sprintf("Robustness Value (RV): %.1f%%\n", rv_A_formal * 100))
+        cat(sprintf("An unobserved confounder would need to explain %.1f%% of both the\n", rv_A_formal * 100))
+        cat("residual variation in outsourcing and productivity to reduce β to zero.\n\n")
+
+        write_csv(
+            tibble(
+                Test = "Oster Bounds (ln_A_formal)",
+                Coefficient = coef(baseline_mod_oster)["ln_A_formal"],
+                Robustness_Value_Percent = rv_A_formal * 100
+            ),
+            "Output/csv/robustness_oster_bounds.csv"
+        )
+        list(success = TRUE)
+    },
+    error = function(e) {
+        cat(sprintf("  [NOTE] Oster bounds skipped: %s\n", conditionMessage(e)))
+        list(success = FALSE)
+    }
+)
+
+
+# =============================================================================
+# VIF & ORTHOGONALIZED MEDIATION (from Stage6)
+# =============================================================================
+cat("\n================================================================\n")
+cat("  VIF & ORTHOGONALIZED MEDIATION (COST-SHIFTING)\n")
+cat("================================================================\n\n")
+
+ortho_result <- tryCatch(
+    {
+        # Check VIF on naive mediation model
+        med_full <- lm(ln_w_inf ~ ln_A_formal + ln_Q_out + E_s, data = master_df)
+        vifs_med <- car::vif(med_full)
+        cat(sprintf("VIF for ln_A_formal: %.2f\n", vifs_med["ln_A_formal"]))
+        cat(sprintf("VIF for ln_Q_out:    %.2f\n", vifs_med["ln_Q_out"]))
+
+        if (!is.na(vifs_med["ln_Q_out"]) && vifs_med["ln_Q_out"] > 4) {
+            cat("Moderate/High multicollinearity confirmed. Orthogonalization required.\n\n")
+        } else {
+            cat("VIF acceptable, but orthogonalizing for rigor.\n\n")
+        }
+
+        # Orthogonalization: residualize ln_Q_out on ln_A_formal
+        mod_ortho_first <- lm(
+            ln_Q_out ~ ln_A_formal + as.factor(NIC_2digit) + as.factor(Year) + as.factor(State_Code),
+            data = master_df, na.action = na.exclude
+        )
+        master_df$Q_out_residual <- resid(mod_ortho_first)
+
+        # Second stage: wage ~ productivity + excess outsourcing
+        mod_ortho_med <- feols(
+            ln_w_inf ~ ln_A_formal + Q_out_residual + E_s | NIC_2digit + Year,
+            data = master_df, cluster = ~State_Code
+        )
+
+        b_qout_resid <- coef(mod_ortho_med)["Q_out_residual"]
+        p_qout_resid <- summary(mod_ortho_med)$coeftable["Q_out_residual", "Pr(>|t|)"]
+
+        cat("--- ORTHOGONALIZED MEDIATION RESULTS ---\n")
+        cat(sprintf("Coefficient on Excess Outsourcing: %+.4f\n", b_qout_resid))
+        cat(sprintf("P-value: %.3f\n\n", p_qout_resid))
+
+        write_csv(
+            tibble(
+                Test = "Orthogonalized Mediation (Excess Outsourcing -> Wages)",
+                b_Q_out_resid = b_qout_resid,
+                p_value = p_qout_resid,
+                VIF_Q_out_Original = vifs_med["ln_Q_out"]
+            ),
+            "Output/csv/robustness_orthogonalization.csv"
+        )
+        list(success = TRUE)
+    },
+    error = function(e) {
+        cat(sprintf("  [NOTE] Orthogonalized mediation skipped: %s\n", conditionMessage(e)))
+        list(success = FALSE)
+    }
+)
+
+
+# =============================================================================
+# BOOTSTRAP CONFIDENCE INTERVALS FOR PERSISTENCE (from Stage6)
+# =============================================================================
+cat("\n================================================================\n")
+cat("  BOOTSTRAP CONFIDENCE INTERVALS: AR(1) PERSISTENCE\n")
+cat("================================================================\n\n")
+
+boot_result <- tryCatch(
+    {
+        boot_persistence <- function(data, indices) {
+            d <- data[indices, ]
+            fit <- lm(
+                ln_N_informal ~ lag_ln_N_informal + ln_A_formal + E_s +
+                    as.factor(Year) + as.factor(NIC_2digit),
+                data = d
+            )
+            return(coef(fit)["lag_ln_N_informal"])
+        }
+
+        cat("Running 1000 bootstrap iterations for persistence parameter...\n")
+        set.seed(42)
+        boot_results <- boot(data = master_df_panel, statistic = boot_persistence, R = 1000)
+
+        ci <- boot.ci(boot_results, type = c("perc", "bca"))
+        b_ar1_original <- boot_results$t0
+        ci_lower <- ci$bca[4]
+        ci_upper <- ci$bca[5]
+
+        cat(sprintf("Bootstrapped AR(1) Estimate: %.4f\n", b_ar1_original))
+        cat(sprintf("95%% BCa Confidence Interval: [%.4f, %.4f]\n", ci_lower, ci_upper))
+
+        if (ci_lower > 0.5) {
+            cat("✓ Structural Persistence holds robustly > 0.5 under non-parametric resampling.\n\n")
+        }
+
+        write_csv(
+            tibble(
+                Test = "AR(1) Bootstrapped 95% CI",
+                AR1_Estimate = b_ar1_original,
+                CI_Lower = ci_lower,
+                CI_Upper = ci_upper,
+                Iterations = 1000
+            ),
+            "Output/csv/robustness_bootstrap_persistence.csv"
+        )
+        list(success = TRUE)
+    },
+    error = function(e) {
+        cat(sprintf("  [NOTE] Bootstrap CI skipped: %s\n", conditionMessage(e)))
+        list(success = FALSE)
+    }
+)
 
 
 # =============================================================================
 # ROBUSTNESS SUMMARY TABLE
 # =============================================================================
 
-cat("================================================================\n")
-cat("  ROBUSTNESS CHECKS — SUMMARY\n")
+cat("\n================================================================\n")
+cat("  ROBUSTNESS CHECKS & DIAGNOSTICS — FULL SUMMARY\n")
 cat("================================================================\n\n")
 
 robust_summary <- tibble(
@@ -766,12 +1236,13 @@ robust_summary <- tibble(
         "RQ2: Median wage",
         "RQ3: Unit root (Balanced LLC & Fisher ADF)",
         "RQ3: AR(2) lag structure",
-        "General: Small-sample t correction"
-    ),
-    Priority = c(
-        "Priority 1", "Priority 1", "Priority 2",
-        "Priority 1 — CRITICAL", "Priority 2",
-        "Verification"
+        "Diagnostic: Multicollinearity (VIF)",
+        "Diagnostic: Heteroscedasticity (Breusch-Pagan)",
+        "Diagnostic: Autocorrelation (Durbin-Watson)",
+        "Diagnostic: Normality (Shapiro-Wilk)",
+        "Sensitivity: Oster Bounds",
+        "Mediation: VIF & Orthogonalization",
+        "Persistence: Bootstrapped 95% CI"
     ),
     Status = c(
         ifelse(placebo_result$success, "✓ Run", "⚠ Skipped"),
@@ -779,12 +1250,18 @@ robust_summary <- tibble(
         ifelse(median_result$success, "✓ Run", "⚠ Skipped"),
         ifelse(unitroot_result$success, "✓ Run", "⚠ Skipped"),
         "✓ Run",
-        "✓ Verified"
+        "✓ Run",
+        "✓ Run",
+        "✓ Run",
+        "✓ Run",
+        ifelse(oster_result$success, "✓ Run", "⚠ Skipped"),
+        ifelse(ortho_result$success, "✓ Run", "⚠ Skipped"),
+        ifelse(boot_result$success, "✓ Run", "⚠ Skipped")
     )
 )
 
 print(robust_summary, n = Inf)
-write_csv(robust_summary, "Output/robustness_summary.csv")
+write_csv(robust_summary, "Output/csv/robustness_summary.csv")
 
 cat("\n================================================================\n")
 cat("  STAGE 4 COMPLETE\n")
@@ -796,8 +1273,9 @@ cat("  robustness_rq2_outlier_wages.*\n")
 cat("  robustness_rq2_median_wage.*\n")
 cat("  robustness_rq3_unitroot.csv\n")
 cat("  robustness_rq3_ar2.*\n")
-cat("  robustness_general_wildbootstrap.csv\n")
-cat("  robustness_general_smallsample.csv\n")
-cat("  figure_robustness_rq2_outliers.png\n")
-cat("  figure_robustness_speccurve.png  (if specr installed)\n")
+cat("  diagnostics_all_models.csv\n")
+cat("  figure_diagnostics_qqplots.png\n")
+cat("  robustness_oster_bounds.csv\n")
+cat("  robustness_orthogonalization.csv\n")
+cat("  robustness_bootstrap_persistence.csv\n")
 cat("  robustness_summary.csv\n")

@@ -1,0 +1,94 @@
+% appendices/appendixC.tex
+\chapter{Appendix C: Robustness Checks and Supplementary Tests}
+\label{appendixC}
+
+This appendix provides detailed results for the robustness checks and supplementary empirical tests discussed in Chapters 5 and 6.
+
+\section{Robustness of Strategic Outsourcing and Wage Pass-Through}
+
+Tables \ref{tab:robustness_outsourcing} and \ref{tab:robustness_wages} present alternative specifications for the two primary reduced-form models. These include excluding outlier states (Manipur), using unweighted averages, and employing different winsorization or categorical treatments of the enforcement variable ($E_s$).
+
+\begin{table}[H]
+	\centering
+	\caption{Robustness Checks: Strategic Outsourcing (Log Outsourcing Share)}
+	\label{tab:robustness_outsourcing}
+	\input{../Output/tex/stage2_robustness_outsourcing}
+\end{table}
+
+\begin{table}[H]
+	\centering
+	\caption{Robustness Checks: Wage Pass-Through (Log Informal Wage)}
+	\label{tab:robustness_wages}
+	\input{../Output/tex/stage2_robustness_wages}
+\end{table}
+
+\newpage
+\section{Alternative Enforcement and Heterogeneity}
+
+Table \ref{tab:alt_enforcement} uses an alternative measure of enforcement: the number of factory inspectors per 1,000 working factories. Table \ref{tab:heterogeneity} explores how the main results vary across the Textiles and Apparel sub-sectors and by the overall level of state enforcement.
+
+\begin{table}[H]
+	\centering
+	\caption{Alternative Enforcement: Inspectors per Factory}
+	\label{tab:alt_enforcement}
+	\input{../Output/tex/stage2_alt_enforcement}
+\end{table}
+
+\begin{table}[H]
+	\centering
+	\caption{Heterogeneity Analysis: Industry and Enforcement Splits}
+	\label{tab:heterogeneity}
+	\input{../Output/tex/stage2_heterogeneity_outsourcing}
+\end{table}
+
+\newpage
+\section{Diagnostic Checks: Placebo and Outliers}
+
+As discussed in Section 5.3, the placebo test in the Chemicals sector (NIC-20) confirms that the productivity-outsourcing relationship is specific to labor-intensive manufacturing. Figure \ref{fig:outlier_diag} identifies influential observations in the wage pass-through model.
+
+\begin{table}[H]
+	\centering
+	\caption{Placebo Test: Chemicals Sector (NIC-20)}
+	\label{tab:placebo}
+	\input{../Output/tex/robustness_rq1_placebo_chemicals}
+\end{table}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{../Output/images/figure_robustness_rq2_outliers}
+	\caption{Outlier Diagnostics: Wage Pass-Through Residuals}
+	\label{fig:outlier_diag}
+\end{figure}
+
+\newpage
+\section{Supplementary Political Economy Tests}
+
+The following tables provide the results for the supplementary tests described in Chapter 6, covering asymmetric cost structures, firm size effects, and market concentration.
+
+\begin{table}[H]
+	\centering
+	\caption{Supplementary Test 4: Asymmetric Cost Shifting}
+	\label{tab:supp_test4}
+	\input{../Output/tex/appendix_test4_asymmetric}
+\end{table}
+
+\begin{table}[H]
+	\centering
+	\caption{Supplementary Test 5: Firm Size and Informality Scale}
+	\label{tab:supp_test5}
+	\input{../Output/tex/appendix_test5_firmsize}
+\end{table}
+
+\begin{table}[H]
+	\centering
+	\caption{Supplementary Test 7: Employment Threshold Effects}
+	\label{tab:supp_test7}
+	\input{../Output/tex/appendix_test7_threshold}
+\end{table}
+
+\begin{table}[H]
+	\centering
+	\caption{Supplementary Test 8: Market Concentration and Monopsony}
+	\label{tab:supp_test8}
+	\input{../Output/tex/appendix_test8_concentration}
+\end{table}

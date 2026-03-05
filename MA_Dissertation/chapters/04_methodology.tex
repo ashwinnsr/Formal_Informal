@@ -1,0 +1,129 @@
+\chapter{Methodology and Data Strategy}\label{chap:method&data}
+
+\section{Data Strategy}
+\label{sec:data}
+
+I construct a \textbf{State-Industry Panel} by pooling data from five cross-sectional rounds covering the period \textbf{2010--11 to 2023--24}. This includes historical data from NSS 67th (2010--11) and NSS 73rd (2015--16) rounds, alongside the modern ASUSE series (2021--22 to 2023--24). The unit of observation is the state $\times$ NIC-2-digit industry cell rather than the district, reflecting the geographic resolution available in public microdata, which suppresses district identifiers to protect factory confidentiality.
+
+I restrict the analysis to the textile manufacturing sector (NIC 13: Textiles; NIC 14: Wearing Apparel) for three reasons. First, outsourcing in textiles represents a direct labor substitute: a formal firm can either hire an embroidery worker or outsource the embroidery task to an informal workshop. In capital-intensive sectors such as chemicals or auto-parts, outsourcing is more complementary than substitutive, which would confound the identification of regulatory arbitrage. Second, this focus justifies the CES production structure assumed in the theoretical model, since informal textile workshops are structurally similar in their task composition, making cross-state comparisons meaningful. Third, the ASUSE sample is sufficiently large in textiles and apparel to yield reliable state-industry-level moments after restricting to job-work enterprises, whereas thinner sectors would produce unstable aggregates.
+
+\subsection{Data Sources}
+
+\subsubsection{Formal Sector: ASI 2021--24}
+
+The Annual Survey of Industries covers all registered manufacturing establishments with ten or more workers (with power) or twenty or more workers (without power). I draw on three blocks:
+
+\begin{itemize}
+	\item \textit{Outsourcing Intensity ($Q_{\text{out}}$):} From \textbf{Block F}, item ``Cost of materials consumed for job work done by others.'' This captures the formal firm's expenditure on off-site subcontracting and is the empirical counterpart to $Q_{\text{out}}$ in the theoretical model. Critically, this is distinct from Block E (contract labor), which records workers employed through contractors \textit{on-site} and is treated as part of the formal firm's internal labor force $L_F$. \textcite{singh2023india} focuses on Block E; this study focuses on Block F to isolate \textit{external} extraction—where the task leaves the formal premises entirely—rather than flexible on-site staffing.
+	
+	\item \textit{Formal Productivity ($A_F$):} Total Factor Productivity calculated using the value-added method, with value added deflated by the relevant wholesale price index and capital stock constructed via the perpetual inventory method. Full construction details are provided in Appendix A.2.
+	
+	\item \textit{Formal Wages:} Total emoluments from Block G, used as a control variable and for the formal-informal wage gap calculation.
+\end{itemize}
+
+To ensure geographic consistency across the 15-year horizon, I rely on \textbf{variable \texttt{a7} in Block A} as the definitive state code, resolving inconsistencies in legacy \texttt{Factory\_ID} prefixes and state-code redefinitions (e.g., Telangana bifurcation). After cleaning and restricting to NIC 13 and NIC 14, the ASI yields a robust longitudinal series across 33 states, which aggregate to 152 state-industry-year observations.
+
+\subsubsection{Informal Sector: ASUSE 2021--24}
+
+The Annual Survey of Unincorporated Sector Enterprises covers non-agricultural establishments outside the formal (registered) sector. I draw on two blocks:
+
+\begin{itemize}
+	\item \textit{Informal Wages ($w_{\text{inf}}$):} \textbf{Average wage per hired worker}, calculated as Block 5 operating expenses on hired workers divided by the count of hired workers from Block 4. This is a more direct proxy for the subcontract price $p_{\text{sub}}$ than gross value added per worker, since it reflects the specific labor cost component that formal firms indirectly pay when outsourcing tasks. Mean and median variants are both used; the baseline analysis uses the mean, with median wages as a robustness check.
+	
+	\item \textit{Informal Enterprise Count ($N_{\text{inf}}$):} The number of enterprises in each state-industry cell, used in the industrial density test.
+\end{itemize}
+
+The ASUSE/NSS sample is restricted to enterprises that report job work receipts as a primary activity. This restriction aligns the informal sample with the formal sector's Block F outsourcing measure and ensures that both sides of the subcontracting relationship are captured. The resulting longitudinal informal dataset covers 152 state-industry-year observations across the five rounds.
+
+\subsubsection{Institutional Data: Enforcement ($E_s$)}
+
+State-level labor enforcement intensity is measured using data from the Ministry of Labour and Employment. The primary enforcement measure, $E_s$, is the \textbf{inspection rate}: the number of inspections conducted divided by the number of registered working factories in each state. This measure captures the probability that a given formal establishment faces regulatory scrutiny and is therefore the most direct proxy for the compliance cost that motivates regulatory arbitrage.
+
+The enforcement data covers 28 states with valid $E_s$ values. The $E_s$ distribution exhibits meaningful variation (mean: 0.223, SD: 0.196, range: [0, 1.0]), with Manipur representing a clear outlier at $E_s = 1.0$. All regressions include a robustness check excluding Manipur to verify that results are not driven by this extreme observation.
+
+An alternative enforcement measure—\textbf{inspector density} (inspectors per factory)—is available for 27 states and is used as a secondary robustness check. As reported in the results, the baseline outsourcing finding is positive but non-significant under this alternative ($\beta = 3.46 \times 10^{-6}$, p=0.122), likely because inspector density is a noisier proxy for realized enforcement pressure than the inspection rate itself.
+
+Following \textcite{Besley2004}, I use enforcement intensity as a quasi-exogenous source of variation in the regulatory costs facing formal firms, interacting it with formal productivity to test whether the outsourcing-productivity relationship is amplified in high-compliance-cost environments.
+
+\subsection{Sample Construction and Aggregation}
+
+\subsubsection{Merging ASI and ASUSE}
+
+ASI and ASUSE/NSS data are merged at the state $\times$ NIC-2-digit level using a common state code (\texttt{State\_Code}) and two-digit industry classification. Six states present in the ASI are missing from the enforcement dataset (state codes 02, 09, 12, 19, 25, 37) and are dropped from the regression sample. The final regression sample comprises \textbf{152 state-industry-year observations} across 28 states and 2 industries.
+
+\subsubsection{Variable Construction}
+
+All continuous variables (wages, productivity, outsourcing intensity) are \textbf{winsorized at the 1st and 99th percentiles} to minimize the influence of measurement error and extreme values. Outsourcing intensity is expressed in levels (Block F cost divided by output) and enters regressions in logarithmic form where non-zero, with zero-outsourcing observations retained throughout. Informal wages are deflated using the Consumer Price Index for Industrial Workers (CPI-IW) to ensure comparability across years in the pooled specification.
+
+\subsubsection{Minimum Cell Size}
+
+State-industry cells with fewer than 10 enterprises in either ASI or ASUSE are excluded from the regression sample to ensure that cell-level moments are reliable. This restriction reduces the sample modestly and does not affect the qualitative findings.
+
+\subsection{Summary Statistics}
+
+The regression sample of 47 state-industry cells exhibits substantial variation in all key variables: log informal wages range from 2.33 to 4.09 (SD: 0.457), log formal productivity ranges from 10.42 to 15.44 (SD: 0.895), and enforcement ranges from 0 to 1.0 (SD: 0.196). The correlation between log formal productivity and log outsourcing intensity is 0.285, consistent with the positive association identified in the baseline regression. The correlation between log productivity and log informal wages is $-0.032$, providing preliminary evidence against wage pass-through.
+
+\section{Empirical Strategy}
+\label{sec:empirical_strategy}
+
+The empirical strategy is organized around three core research questions and two supplementary tests. Rather than relying on structural estimation of deep parameters (e.g., through Simulated Method of Moments), which is infeasible at the state-industry level of aggregation given the sample size and the unobservability of bargaining power $\mu$, I employ a sequence of targeted reduced-form tests. These tests are designed to adjudicate between the \textit{displacement} hypothesis (informality as transitional) and the \textit{adverse incorporation} hypothesis (informality as structural) by isolating specific empirical predictions of the GVC-monopsony framework.
+
+\subsection{Test 1: Strategic Outsourcing (RQ1)}
+
+The first and primary test asks whether formal productivity is positively associated with outsourcing intensity—a sign of regulatory arbitrage—or negatively associated, as the displacement hypothesis predicts. I estimate:
+
+\begin{equation}
+	\ln Q_{\text{out},si} = \alpha + \beta_1 \ln A_{F,si} + \beta_2 E_s + \beta_3 E_s^2 + \theta_i + \varepsilon_{si}
+\end{equation}
+
+where $\theta_i$ are industry fixed effects and standard errors are clustered at the state level. The non-linear enforcement terms allow for a potentially hump-shaped relationship between enforcement and outsourcing. The enforcement heterogeneity analysis splits the sample at the median $E_s$ (0.165) to test whether the outsourcing-productivity elasticity is amplified in high-compliance-cost states, as the regulatory arbitrage hypothesis predicts.
+
+A \textbf{placebo test} on the chemicals sector (NIC-20) validates the labor-regulation channel: if the positive productivity-outsourcing association reflects labor cost avoidance, it should be absent in capital-intensive sectors where informal subcontracting is not a viable substitute for internal production.
+
+\subsection{Test 2: Wage Pass-Through (RQ2)}
+
+The second test evaluates whether formal productivity gains are shared with informal workers, as competitive labor markets would predict, or captured entirely by formal buyers, consistent with monopsonistic wage-setting. I estimate the following specification using the pooled 2021-24 panel:
+
+\begin{equation}
+	\ln w_{\text{inf},sit} = \alpha + \beta_1 \ln A_{F,sit} + \beta_2 E_s + \beta_3 (E_s \times \ln A_{F,sit}) + \theta_i + \lambda_t + \varepsilon_{sit}
+\end{equation}
+
+where $\theta_i$ are industry fixed effects, $\lambda_t$ are year fixed effects, and standard errors are clustered at the state level. The coefficient $\beta_1$ is the direct pass-through elasticity. The interaction $\beta_3$ tests whether stricter enforcement enables informal workers to capture a share of productivity rents—the competitive bargaining channel. Under the monopsony hypothesis, both $\beta_1 \approx 0$ and $\beta_3 \approx 0$.
+
+\subsection{Test 3: Persistence of Informality (RQ3)}
+
+The third test directly assesses whether informality is structurally embedded or transitional by estimating a dynamic panel model:
+
+\begin{equation}
+	\ln N_{\text{inf},t} = \alpha + \beta_1 \ln N_{\text{inf},t-1} + \beta_2 \ln A_{F,t} + \gamma E_s + \theta_i + \varepsilon
+\end{equation}
+
+The displacement hypothesis predicts a low autoregressive coefficient ($\beta_1 < 0.3$), reflecting responsiveness of informal employment to current conditions. The structuralist hypothesis predicts high persistence ($\beta_1 > 0.5$), indicating path dependence. The persistence panel uses 93 observations after lagging, covering transitions from 2021-22 to 2022-23 and from 2022-23 to 2023-24.
+
+\subsection{Supplementary Tests}
+
+Two supplementary tests are implemented with the explicit acknowledgment that both are underpowered at the state-industry level and should be treated as directional evidence rather than confirmatory.
+
+\textbf{Supplementary Test A: Industrial Density.} Regresses the count of informal enterprises ($N_{\text{inf}}$) on formal productivity, testing whether productive industries generate informal ``satellites.'' A positive coefficient would support adverse incorporation; a negative coefficient would support displacement. The predicted effect is likely to be confounded at the state level by two opposing forces—satellite generation and formal job creation drawing workers away from informal self-employment—which cannot be disentangled without district-level data.
+
+\textbf{Supplementary Test B: Cost-Shifting via Outsourcing.} Implements a two-step mediation analysis asking whether outsourcing volume expansion is associated with wage suppression net of formal productivity. The volume equation ($\ln Q_{\text{out}}$ on $\ln A_F$) is estimated first; the price-squeeze equation ($\ln w_{\text{inf}}$ on $\ln Q_{\text{out}}$ and $\ln A_F$) is estimated second. The positive correlation between $Q_{\text{out}}$ and $A_F$ ($r = 0.285$) introduces multicollinearity in the second step, which likely explains the null mediation result. District-level data would substantially reduce this problem.
+
+\subsection{Empirically-Grounded Monte Carlo Simulation}
+
+To provide theoretical context for the reduced-form estimates, I develop a 20-period empirically-grounded Monte Carlo simulation. Unlike a purely theoretical calibration, this approach is directly informed by the empirical results: the key parameters (outsourcing-productivity elasticity, wage pass-through, and employment persistence) are drawn from the estimated sampling distributions of the 2021--24 pooled OLS models. By propagating these estimates forward through 10,000 Monte Carlo draws, the simulation illustrates how productivity shocks and policy interventions (such as a direct wage floor) affect outsourcing, wages, and employment over time. This provides a qualitative benchmark against which to interpret the long-run consequences of the identified industrial regime.
+
+\subsection{Identification Strategy and Limitations}
+
+\subsubsection{Endogeneity of Enforcement}
+
+The primary identification concern is that state enforcement intensity ($E_s$) is not randomly assigned. States with strong labor institutions differ systematically from others in political ideology, historical union density, and industrial composition—factors that may independently drive both formal productivity and informal wages. This creates potential omitted variable bias in the enforcement interaction terms.
+
+I address this through a triangulation strategy rather than instrumental variables, since credible instruments for enforcement intensity are unavailable in the ASI-ASUSE public data. The triangulation relies on: (i) industry fixed effects absorbing time-invariant industry-level confounders; (ii) year fixed effects in the pooled specification absorbing common macro shocks; (iii) the placebo test in chemicals confirming that the outsourcing result is sector-specific rather than reflecting a generic productivity-enforcement correlation; and (iv) robustness across six enforcement specifications. I emphasize that the resulting estimates are conditional correlations consistent with the adverse incorporation hypothesis, not identified causal effects.
+
+\subsubsection{Statistical Power}
+
+Given that enforcement varies at the state level and the regression sample contains 26 states, power is a binding constraint. For the main pass-through coefficient ($\beta_1$ in the wage equation), Monte Carlo simulations suggest approximately 65\% power to detect a medium effect size at the 5\% level—implying a non-trivial risk of Type II error. The null wage pass-through result is therefore robust not only in the sense of surviving multiple specifications, but also in the sense that the data \textit{would} have detected a medium-sized positive effect if one existed.
+
+For the supplementary tests, power is lower still: approximately 55\% for the industrial density regression at N=141. The inconclusive results for Tests 2 (industrial density) and 3 (cost-shifting) should therefore be interpreted as low-power failures to detect rather than evidence against adverse incorporation.
+
+The persistence test (RQ3) benefits from a longer effective sample ($N=93$ panel transitions) and a strong prior signal ($\beta_1 > 0.5$ expected under structuralism), giving it the highest power of the three core tests.

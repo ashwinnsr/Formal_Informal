@@ -1,0 +1,75 @@
+% appendices/appendixA.tex - CORRECTED
+\chapter{Appendix A: Data Appendix}
+\label{appendixA}
+
+\section{Variable Construction and Measurement}
+
+This appendix details the construction of key variables and the data cleaning protocol used to harmonize the Annual Survey of Industries (ASI) and the Annual Survey of Unincorporated Sector Enterprises (ASUSE) for the 2023-24 period.
+
+\subsection{Variable Definitions and Deflation}
+
+All monetary values are deflated to constant 2011-12 prices to ensure that cross-sectional productivity differences are not confounded by regional price variations.
+
+\begin{itemize}
+	\item \textbf{Output and Inputs:} Deflated using the industry-specific Wholesale Price Index (WPI).
+	\item \textbf{Wages:} Deflated using the Consumer Price Index for Industrial Workers (CPI-IW) at the state level.
+\end{itemize}
+
+\begin{table}[ht]
+	\centering
+	\caption{Mapping Theoretical Parameters to Empirical Variables}
+	\label{tab:variable_mapping}
+	\begin{tabular}{p{3cm}p{1.5cm}p{5cm}p{4.5cm}}
+		\toprule
+		\textbf{Concept} & \textbf{Symbol} & \textbf{ASI/ASUSE Variable} & \textbf{Measurement Goal} \\ 
+		\midrule
+		Productivity & $A_F$ & Revenue-based TFP (TFPR) & Efficiency of formal "surplus" \\ 
+		Informal Wage & $w_{\text{inf}}$ & Total emoluments / Hired workers (ASUSE) & The bargaining outcome \\ 
+		Enforcement & $E_s$ & State-level inspector-to-factory ratio, 2021--22 & Institutional "policing power" \\ 
+		Outsourcing & $Q_{\text{out}}$ & (Cost of Job Work) / (Total Inputs) & Integration of value chain \\ 
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+\subsection{TFP Calculation and Parameterization}
+
+Formal sector productivity ($A_F$) is estimated as the Solow Residual:
+
+\[
+\ln A_{F,dsi} = \ln Y_{dsi} - \theta_i \ln L_{dsi} - (1-\theta_i) \ln K_{dsi}
+\]
+
+where $Y$ is real GVA, $L$ is total mandays, and $K$ is net fixed assets. The labor share $\theta_i$ is calculated as the median ratio of total emoluments to GVA within each 2-digit NIC industry.
+
+\textbf{Note:} This $\theta_i$ (labor's share of output) is distinct from the returns-to-scale parameter $\alpha$ in Equation (1).
+
+\subsection{Data Cleaning and Outlier Rules}
+
+To ensure the structural model is disciplined by reliable moments, the following "cleaning" filters are applied:
+
+\begin{enumerate}
+	\item \textbf{Subcontracting Filter:} In ASUSE, we retain only enterprises that explicitly report receiving "job work" from other units. This ensures $w_{\text{inf}}$ reflects the supply-chain wage rather than independent retail earnings.
+	\item \textbf{Zero-Value Filter:} Observations with zero or negative GVA, zero total assets, or zero employees are dropped, as they typically represent defunct units or reporting errors.
+	\item \textbf{Cell-Size Constraint:} District-industry cells $(d,i)$ with fewer than 10 observations in either the formal (ASI) or informal (ASUSE) sample are excluded. This prevents the regression results from being driven by idiosyncratic "outlier" firms in small districts.
+	\item \textbf{Winsorization:} To mitigate the impact of extreme values (e.g., a firm reporting 10,000\% productivity), all wage and productivity variables are winsorized at the 1st and 99th percentiles.
+\end{enumerate}
+
+\subsection{Final Sample Construction}
+
+The final state-industry panel consists of 141 cells across 21 states and 3 major textile/apparel 3-digit industries. The longitudinal dimension covers the 2021--22 and 2023--24 waves, which are pooled for the primary analysis.
+
+\subsection{Robustness: Alternative Measures}
+
+For sensitivity analysis, I construct alternative measures:
+
+\begin{itemize}
+	\item \textbf{Alternative Enforcement:} Inspection frequency (inspections per registered factory per year)
+	\item \textbf{Alternative Productivity:} Gross Value Added per worker
+	\item \textbf{Alternative Wage Measure:} Value added per worker in informal enterprises
+\end{itemize}
+
+\section{Conclusion of Appendix A}
+
+Summary of data appendix content.
+
+\end{document}

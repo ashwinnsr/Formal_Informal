@@ -238,7 +238,7 @@ cat("=== PHASE 4: CREATING MASTER DATASET ===\n")
 # --- Step 4.1: Load Enforcement Data ---
 cat("Loading enforcement data...\n")
 
-enforcement_path <- "C:/Users/ashwin/Documents/Formal_Informal/Data/External/State_Enforcement.csv"
+enforcement_path <- "C:/Users/ashwin/Documents/Formal_Informal/Data/External/State_Enforcement_2023.csv"
 
 if (!file.exists(enforcement_path)) {
     cat("  ERROR: File NOT found at:", enforcement_path, "\n")
@@ -376,8 +376,8 @@ etable(mod1, mod2,
 
 # Save results
 cat("\nSaving results to Output/\n")
-etable(mod1, mod2, tex = TRUE, file = "Output/state_industry_regressions.tex")
-etable(mod1, mod2, file = "Output/state_industry_regressions.csv")
+etable(mod1, mod2, tex = TRUE, file = "Output/tex/state_industry_regressions.tex")
+etable(mod1, mod2, file = "Output/csv/state_industry_regressions.csv")
 
 # =============================================================================
 # PHASE 6: DIAGNOSTIC CHECKS

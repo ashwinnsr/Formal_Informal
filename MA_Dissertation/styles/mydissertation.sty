@@ -1,0 +1,38 @@
+% styles/mydissertation.sty
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{styles/mydissertation}[2024 Dissertation Style]
+
+% Formatting
+\usepackage{titlesec}
+\usepackage{titletoc}
+\usepackage{fancyhdr}
+\usepackage{etoolbox}
+
+
+
+% Chapter formatting
+\titleformat{\chapter}[display]
+{\normalfont\huge\bfseries}
+{\chaptertitlename\ \thechapter}{20pt}{\Huge}
+
+\titlespacing*{\chapter}{0pt}{-30pt}{40pt}
+
+% Custom commands
+\newcommand{\policy}{\mathcal{P}}
+\newcommand{\enforce}{\mathcal{E}}
+\newcommand{\welfare}{\mathcal{W}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Var}{\operatorname{Var}}
+\newcommand{\Cov}{\operatorname{Cov}}
+
+% For regression tables
+\usepackage{siunitx}
+\sisetup{
+	input-symbols = (),
+	group-digits = false,
+	table-align-text-pre = false,
+	table-align-text-post = false
+}
+
+\endinput

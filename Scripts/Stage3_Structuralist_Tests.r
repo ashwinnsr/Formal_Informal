@@ -5,8 +5,8 @@
 # PRIMARY FINDING: Test 6 — Path Dependence / Structural Lock-In
 #   β(lag_N_informal) > 0.5 → informality is structurally embedded
 #
-# Reads: Output/multiyear_master_df.csv
-# Writes: Output/stage3_persistence_*.tex/.csv, figure_test6_persistence.png
+# Reads: Output/csv/multiyear_master_df.csv
+# Writes: Output/tex/stage3_persistence_*.tex/.csv, figure_test6_persistence.png
 #
 # Note: Tests 4,5,7,8 (exploratory analyses) are in Stage3_Appendix_Tests.r
 ################################################################################
@@ -31,11 +31,14 @@ cat("================================================================\n\n")
 # LOAD DATA
 # =============================================================================
 
-master_df <- read_csv("Output/multiyear_master_df.csv", show_col_types = FALSE) %>%
+# Load data - combined long-run panel (2010-2024)
+master_df <- read_csv("Output/csv/combined_longrun_df.csv", show_col_types = FALSE) %>%
     mutate(
         NIC_2digit = as.factor(NIC_2digit),
         Year_char = as.character(Year),
         Year_num = case_when(
+            Year_char == "2010-11" ~ 2010L,
+            Year_char == "2015-16" ~ 2015L,
             Year_char == "2021-22" ~ 2021L,
             Year_char == "2022-23" ~ 2022L,
             Year_char == "2023-24" ~ 2023L,
@@ -76,18 +79,22 @@ cat("Hypothesis (Structural Embedding / Path Dependence):\n")
 cat("  - Past informality strongly predicts current → β(lag) > 0.5\n\n")
 
 # Build panel with lagged N_informal
+# Note: For annual data (2021-24), lag is 1 year. For 2010-2015, lag is 5 years.
+# Both test persistence over available intervals.
 master_df_panel <- master_df %>%
     arrange(State_Code, NIC_2digit, Year_num) %>%
     group_by(State_Code, NIC_2digit) %>%
     mutate(
-        lag_N_informal    = dplyr::lag(N_informal),
-        lag_ln_N_informal = log(lag_N_informal + 1)
+        lag_N_informal = dplyr::lag(N_informal),
+        lag_ln_N_informal = log(lag_N_informal + 1),
+        diff_ln_N_informal = ln_N_informal - lag_ln_N_informal,
+        lag_diff_ln_N_informal = dplyr::lag(diff_ln_N_informal)
     ) %>%
     ungroup() %>%
     filter(!is.na(lag_ln_N_informal))
 
 cat(sprintf(
-    "Persistence panel: %d observations (year-over-year, N>0 after lag)\n\n",
+    "Persistence panel: %d observations (includes 2010→2015 and 2015→2021 transitions)\n\n",
     nrow(master_df_panel)
 ))
 
@@ -120,7 +127,7 @@ mod_persistence_nic <- tryCatch(
 # Model 6c: Controlling for formal employment (scale effects)
 mod_persistence_scale <- tryCatch(
     feols(
-        ln_N_informal ~ lag_ln_N_informal + ln_A_formal + ln_L_formal + E_s | Year,
+        ln_N_informal ~ lag_ln_N_informal + ln_A_formal + ln_L_formal + E_s | NIC_2digit + Year,
         data    = master_df_panel,
         cluster = ~State_Code
     ),
@@ -130,11 +137,25 @@ mod_persistence_scale <- tryCatch(
     }
 )
 
+# Model 6d: First-Difference (Growth) Persistence
+mod_persistence_fd <- tryCatch(
+    feols(
+        diff_ln_N_informal ~ lag_diff_ln_N_informal | Year,
+        data    = master_df_panel %>% filter(!is.na(lag_diff_ln_N_informal)),
+        cluster = ~State_Code
+    ),
+    error = function(e) {
+        cat("  [NOTE] FD persistence model failed (possibly insufficient lags):\n")
+        NULL
+    }
+)
+
 cat("--- Regression Results ---\n")
 models_6 <- Filter(Negate(is.null), list(
     "Base (Year FE)"       = mod_persistence_base,
     "NIC+Year FE"          = mod_persistence_nic,
-    "w/ Formal Employment" = mod_persistence_scale
+    "w/ Formal Employment" = mod_persistence_scale,
+    "First-Difference"     = mod_persistence_fd
 ))
 
 if (length(models_6) > 0) {
@@ -225,7 +246,7 @@ if (length(models_6) > 0) {
     do.call(etable, c(models_6, list(
         headers = names(models_6),
         tex     = TRUE,
-        file    = "Output/stage3_persistence_models.tex"
+        file    = "Output/tex/stage3_persistence_models.tex"
     )))
 }
 
@@ -246,9 +267,9 @@ persist_summary <- tibble(
     )
 )
 
-write_csv(persist_summary, "Output/stage3_persistence_summary.csv")
-cat("Results saved: Output/stage3_persistence_models.tex\n")
-cat("Results saved: Output/stage3_persistence_summary.csv\n\n")
+write_csv(persist_summary, "Output/csv/stage3_persistence_summary.csv")
+cat("Results saved: Output/tex/stage3_persistence_models.tex\n")
+cat("Results saved: Output/csv/stage3_persistence_summary.csv\n\n")
 
 
 # =============================================================================
@@ -359,11 +380,11 @@ if (!is.null(mod_persistence_base) && !is.na(b_persist)) {
                 caption = "Structuralist threshold: β > 0.5; Displacement prediction: β < 0.3"
             )
 
-        ggsave("Output/figure_test6_persistence.png", p6_combined, width = 9, height = 11, dpi = 300)
-        cat("Figure saved: Output/figure_test6_persistence.png\n")
+        ggsave("Output/images/figure_test6_persistence.png", p6_combined, width = 9, height = 11, dpi = 300)
+        cat("Figure saved: Output/images/figure_test6_persistence.png\n")
     } else {
-        ggsave("Output/figure_test6_persistence.png", p6a, width = 8, height = 6, dpi = 300)
-        cat("Figure saved: Output/figure_test6_persistence.png\n")
+        ggsave("Output/images/figure_test6_persistence.png", p6a, width = 8, height = 6, dpi = 300)
+        cat("Figure saved: Output/images/figure_test6_persistence.png\n")
     }
 }
 

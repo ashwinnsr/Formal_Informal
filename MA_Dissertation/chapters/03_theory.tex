@@ -1,0 +1,165 @@
+\chapter{Theoretical Framework}\label{chap:theory}
+
+In this chapter, I formalize the theoretical model that guides my empirical strategy. This framework provides a rigorous foundation for the political economy tests conducted in the subsequent analysis, moving beyond a simple "transitional" view of informality toward a structuralist understanding of extraction and displacement.
+
+Unlike traditional dualist models that view informality as a transitory friction, the framework developed here treats the formal-informal linkage as a structural feature of modern production. By modeling the "Make vs. Buy" decision through a lens of bargaining and power, I derive testable predictions about how productivity gains, institutional enforcement, and Global Value Chain (GVC) structures shape the distribution of economic surplus. This theoretical foundation serves as the benchmark for adjudicating between the \textit{displacement} and \textit{adverse incorporation} hypotheses.
+
+\section{Model Specification}
+The central empirical challenge of this dissertation is to distinguish between two competing explanations for low informal sector wages in India's textile value chains. The displacement view attributes wage gaps to technological backwardness: informal firms simply produce less value per worker due to obsolete equipment and limited scale. The extraction (or adverse incorporation) view attributes wage gaps to unequal bargaining power: formal buyers can exploit their monopsony position to appropriate most of the surplus. 
+
+To disentangle these mechanisms, I develop a structural model with four core components: The Decision to Outsource, The Institutional Bargaining Game, the Monopsony-GVC Logic, and the Industrial Density Mechanism.
+
+\subsection{The Decision to Outsource}
+
+A representative Formal Firm ($F$) in state $s$ and industry ii
+$i$ maximizes profit by choosing between producing tasks in-house (using regulated labor $L_F$) or outsourcing them (using informal job-work $M_{\text{inf}}$).
+
+
+The production function is modeled as a nested \textbf{Constant Elasticity of Substitution (CES)} technology. For tractability, I impose Constant Returns to Scale (CRS), consistent with the assumption of perfect competition in the product market:
+
+\begin{equation}
+	Y_{F,dsi} = A_{F,dsi} \left[ \gamma L_{F,dsi}^\rho + (1-\gamma) M_{\text{inf},dsi}^\rho \right]^{1/\rho}
+\end{equation}
+
+where:
+\begin{itemize}
+	\item $Y_F$ = Output of the formal firm
+	\item $A_F$ = Formal firm Total Factor Productivity (Hicks-neutral technical change)
+	\item $\gamma \in (0,1)$ = Distribution parameter (share of formal labor)
+	\item $\rho < 1$ = Substitution parameter. The elasticity of substitution is $\sigma = \frac{1}{1-\rho}$.
+	\item $M_{\text{inf}}$ = Quantity of outsourced informal tasks
+\end{itemize}
+
+In textiles, tasks like embroidery, dyeing, or stitching can be moved between a factory floor and outside workshops. The parameter $\rho$ captures this substitutability. When $\sigma$ is high (close substitutes), formal firms can easily switch between in-house production and outsourcing in response to relative price changes. When $\sigma$ is low (complements), the production structure is more rigid.
+
+\subsection{The Institutional Bargaining Game}
+
+Unlike formal labor, which faces statutory minimum wages, the price of outsourced tasks ($p_{\text{sub}}$) is determined through negotiation between formal buyers and informal suppliers. Following the generalized Nash bargaining framework, the equilibrium price is:
+
+\begin{equation}
+	p_{\text{sub}} = (1 - \mu_s) \cdot MC_{\text{inf}} + \mu_s \cdot MRP_F
+\end{equation}
+
+where:
+\begin{itemize}
+	\item $MC_{\text{inf}}$ = Marginal cost of informal production
+	\item $MRP_F$ = Marginal revenue product of the task for the formal firm
+	\item $\mu_s \in [0,1]$ = Informal sector's bargaining power in state $s$
+\end{itemize}
+
+When $\mu_s = 0$, formal firms capture all surplus (full monopsony); when $\mu_s = 1$, informal suppliers capture all surplus (competitive outcome).
+
+\subsection{Monopsony and GVC Logic}
+
+A critical addition to this framework is the explicit incorporation of Global Value Chain (GVC) logic. As posited by \textcite{nadvi2004global} and \textcite{chen2007rethinking}, the structure of contemporary manufacturing is defined by "buyer-driven" chains where powerful lead firms capture the majority of rents. In this context, informality is not just a separate sector but a "satellite" system that allows formal lead firms to externalize risks and push costs downward.
+
+Specifically, the formal firm exercises \textbf{monopsony wage-setting power}. Because informal suppliers often lack alternative markets (high relationship-specificity), the formal firm can set a price ($p_{\text{sub}}$) that minimally covers the marginal cost of production without sharing any of the productivity gains ($A_F$). This yields the \textbf{monopsony rent-capture hypothesis}: if extraction dominates, the elasticity of informal wages with respect to formal TFP should be statistically indistinguishable from zero ($E_s \times \ln A_F \to 0$ in low-enforcement environments).
+
+Furthermore, the GVC logic suggests a strategic \textbf{cost-shifting mechanism}. Lead firms increase the volume of tasks outsourced ($Q_{\text{out}}$) to manage production growth while simultaneously squeezing the prices (wages) paid to those suppliers to maintain margins. This predicts that higher outsourcing intensity may be negatively correlated with informal wages, independent of productivity—a prediction I test via mediation analysis.
+
+% THE FLOWCHART (INSERTED HERE)
+\begin{figure}[h]
+	\centering
+	\begin{tikzpicture}[node distance=1.5cm, auto]
+		\tikzstyle{block} = [rectangle, draw, fill=blue!10, text width=3cm, text centered, rounded corners, minimum height=1cm]
+		\tikzstyle{line} = [draw, -latex', thick]
+		\tikzstyle{inst} = [ellipse, draw, fill=red!10, text width=2.5cm, text centered]
+		
+		\node [block] (formal) {Formal Firm ($A_F$) \\ (ASI)};
+		\node [block, below of=formal, yshift=-1.2cm] (decision) {Production Choice};
+		\node [block, below left of=decision, xshift=-2.5cm, yshift=-1.5cm] (make) {\textbf{Make} \\ (Regulated Labor) \\ Cost: $w_F$};
+		\node [block, below right of=decision, xshift=2.5cm, yshift=-1.5cm] (buy) {\textbf{Buy} \\ (Informal Task) \\ Cost: $p_{sub}$};
+		
+		\node [inst, right of=decision, xshift= 6cm] (state) {\textbf{The State ($E$)} \\ (Inspections, Laws)};
+		
+		\node [block, below of=buy, yshift=-1.5cm] (bargain) {\textbf{Bargaining Game} \\ Power $\mu(E)$};
+		
+		\path [line] (formal) -- (decision);
+		\path [line] (decision) -- (make);
+		\path [line] (decision) -- (buy);
+		\path [line] (buy) -- (bargain);
+		\path [line, dashed] (state) |- node[near end, above] {Determines} (bargain);
+		
+		\node [right of=bargain, node distance=7cm, text width=5cm, align=left] (note) {\footnotesize \textit{Hypothesis: Lax Enforcement ($E \downarrow$) $\to$ Formal Power ($\mu \downarrow$)}};
+		\draw [dashed] (bargain) -- (note);
+	\end{tikzpicture}
+	\caption{The Political Economy of Value Chains}
+	\label{fig:model}
+\end{figure}
+
+\subsection{Industrial Density and Structural Informality}
+
+A final component of this framework addresses the \textit{scale} of the informal sector. While the displacement hypothesis predicts that formal growth will absorb informal workers, the \textbf{adverse incorporation hypothesis} suggests that productive formal industries actively create "informal satellites" to manage increased output without increasing regulated labor costs. 
+
+I formalize this through the \textbf{Industrial Density Effect}. Let $N_{\text{inf}}$ be the number of informal satellite enterprises supporting a formal industry. In an adverse incorporation regime, $N_{\text{inf}}$ is a function of formal productivity $A_F$:
+
+\begin{equation}
+	N_{\text{inf},dsi} = f(A_{F,dsi}, L_{F,dsi}) \quad \text{where} \quad \frac{\partial N_{\text{inf}}}{\partial A_F} > 0
+\end{equation}
+
+This prediction is unique to the structuralist view: as formal firms become more productive, they multiply the "density" of the informal sector via subcontracting layers, rather than replacing it.
+
+\subsection{How Enforcement Affects Bargaining Power}
+
+\textbf{The key innovation} of this model is to endogenize $\mu_s$ as a function of the state's enforcement environment ($E_s$).
+
+In states with strict labor law enforcement, informal workers have credible access to formal sector employment at legally mandated wages. This raises their reservation wage---the minimum they will accept for informal work. Conversely, in states with weak enforcement, formal firms routinely violate minimum wage laws, so informal workers cannot credibly threaten to switch to formal employment. Their outside option is weaker, reducing their bargaining power.
+
+Formally, let $R_s$ denote the reservation wage in state $s$. This depends on:
+\begin{itemize}
+	\item The statutory minimum wage $w^{\text{min}}_s$
+	\item The probability of enforcement $\pi(E_s)$, where $\pi'(E_s) > 0$
+\end{itemize}
+
+The effective outside option is:
+\begin{equation}
+	R_s = \pi(E_s) \cdot w^{\text{min}}_s + [1 - \pi(E_s)] \cdot w^{\text{outside}}
+\end{equation}
+
+where $w^{\text{outside}}$ is the fallback wage in the absence of enforcement (e.g., subsistence agriculture, casual labor).
+
+In Nash bargaining, the informal surplus is $(p_{\text{sub}} - R_s)$ rather than $(p_{\text{sub}} - MC_{\text{inf}})$. Higher enforcement raises $R_s$, which increases the informal sector's bargaining power:
+
+\begin{equation}
+	\mu_s = f(R_s(E_s)) \quad \text{where} \quad \frac{d\mu_s}{dE_s} = f'(R_s) \cdot \pi'(E_s) > 0
+\end{equation}
+
+For empirical implementation, I approximate this with a linear reduced form:
+
+\begin{equation}
+	\mu_s = \beta_0 + \beta_1 E_s + \epsilon_s
+\end{equation}
+
+\textbf{Hypothesis:} $\beta_1 > 0$. States with stricter enforcement exhibit higher informal bargaining power, manifesting as greater ``pass-through'' of formal sector productivity gains to informal wages.
+
+\subsection{Equilibrium Specification}
+
+To make the model tractable for a Master's thesis, I adopt a \textbf{partial equilibrium} framework with the following assumptions:
+
+\begin{enumerate}
+	\item \textbf{Product market:} Formal firms are price-takers in the output market (perfect competition). This allows me to treat output price $P$ as exogenous.
+	
+	\item \textbf{Firm entry:} The number and productivity distribution of formal firms in each district-industry is taken as given (no entry/exit dynamics). This is justified by the cross-sectional nature of the data.
+	
+	\item \textbf{Informal supply:} Informal suppliers are atomistic. Each district-industry has a large number of informal firms with marginal cost $MC_{\text{inf}}$ determined by local factor costs (wages, materials). Informal capacity is assumed elastic within the cross-section.
+	
+	\item \textbf{Market clearing:} For a given district-industry, total demand for outsourced tasks by formal firms equals total supply from informal firms. This pins down the equilibrium quantity $M_{\text{inf}}$.
+\end{enumerate}
+
+These assumptions allow me to focus on the \textit{distribution} of surplus (via $\mu_s$) conditional on productivity and costs, rather than modeling the full general equilibrium.
+
+\subsection{Interpretation: What $\mu_s$ Actually Captures}
+\label{subsec:mu_interpretation}
+
+The estimated bargaining power parameter $\mu_s$ should be interpreted as a \textbf{reduced-form parameter} that captures the net effect of enforcement on surplus distribution. It implicitly embeds three distinct mechanisms:
+
+\begin{enumerate}
+	\item \textbf{Direct outside option effect:} $\pi(E_s)$ raises the credibility of formal employment as an alternative for informal workers.
+	
+	\item \textbf{Job availability effect:} Conditional on enforcement, the actual density of formal jobs in the local labor market determines whether the outside option is accessible. Even with perfect enforcement, if formal jobs are scarce ($D_s$ is low), workers' bargaining position remains weak.
+	
+	\item \textbf{Firm strategic response:} Enforcement may change firms' make-or-buy decisions, shifting the composition of tasks allocated to informal suppliers. If firms respond to stricter regulation by outsourcing more labor-intensive tasks, this could paradoxically increase informal employment while affecting bargaining dynamics.
+\end{enumerate}
+
+Our empirical strategy disentangles mechanism (1) from (2) through the interaction of enforcement and productivity in the reduced-form analysis, and tests for (3) through the outsourcing intensity mediation. The bargaining power parameter $\mu_s$ thus represents the \textbf{equilibrium bargaining power} after accounting for these combined forces, providing the analytical basis for evaluating the comparative dynamics of productivity shocks and institutional change.
+

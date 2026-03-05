@@ -178,7 +178,7 @@ asuse_state_industry_uw <- asuse_firm_level %>%
 # --- 1.9: Load enforcement data ---
 cat("Loading enforcement data...\n")
 enforcement_raw <- read_csv(
-    "Data/External/State_Enforcement.csv",
+    "Data/External/State_Enforcement_2023.csv",
     show_col_types = FALSE
 )
 
@@ -394,28 +394,28 @@ etable(mod1_base, mod1_a1, mod1_a2, mod1_a3, mod1_a4,
 etable(mod2_base, mod2_a1, mod2_a2, mod2_a3, mod2_a4,
     title = "Robustness: Outsourcing",
     headers = c("Baseline", "No Manipur", "Unweighted", "Winsor E_s", "Quartile E_s"),
-    tex = TRUE, file = "Output/stage2_robustness_outsourcing.tex"
+    tex = TRUE, file = "Output/tex/stage2_robustness_outsourcing.tex"
 )
 
 etable(mod1_base, mod1_a1, mod1_a2, mod1_a3, mod1_a4,
     title = "Robustness: Wages",
     headers = c("Baseline", "No Manipur", "Unweighted", "Winsor E_s", "Quartile E_s"),
-    tex = TRUE, file = "Output/stage2_robustness_wages.tex"
+    tex = TRUE, file = "Output/tex/stage2_robustness_wages.tex"
 )
 
 # CSV versions
 etable(mod2_base, mod2_a1, mod2_a2, mod2_a3, mod2_a4,
     headers = c("Baseline", "No Manipur", "Unweighted", "Winsor E_s", "Quartile E_s"),
-    file = "Output/stage2_robustness_outsourcing.csv"
+    file = "Output/csv/stage2_robustness_outsourcing.csv"
 )
 
 etable(mod1_base, mod1_a1, mod1_a2, mod1_a3, mod1_a4,
     headers = c("Baseline", "No Manipur", "Unweighted", "Winsor E_s", "Quartile E_s"),
-    file = "Output/stage2_robustness_wages.csv"
+    file = "Output/csv/stage2_robustness_wages.csv"
 )
 
-cat("\n  Saved: Output/stage2_robustness_outsourcing.tex/.csv\n")
-cat("  Saved: Output/stage2_robustness_wages.tex/.csv\n")
+cat("\n  Saved: Output/tex/stage2_robustness_outsourcing.tex/.csv\n")
+cat("  Saved: Output/tex/stage2_robustness_wages.tex/.csv\n")
 
 
 # =============================================================================
@@ -471,15 +471,15 @@ etable(mod2_base_restricted, mod2_alt,
 etable(mod1_alt, mod2_alt,
     title = "Alternative Enforcement",
     headers = c("Wages", "Outsourcing"),
-    tex = TRUE, file = "Output/stage2_alt_enforcement.tex"
+    tex = TRUE, file = "Output/tex/stage2_alt_enforcement.tex"
 )
 
 etable(mod1_alt, mod2_alt,
     headers = c("Wages", "Outsourcing"),
-    file = "Output/stage2_alt_enforcement.csv"
+    file = "Output/csv/stage2_alt_enforcement.csv"
 )
 
-cat("\n  Saved: Output/stage2_alt_enforcement.tex/.csv\n")
+cat("\n  Saved: Output/tex/stage2_alt_enforcement.tex/.csv\n")
 
 
 # =============================================================================
@@ -588,27 +588,27 @@ etable(mod1_high, mod1_low,
 etable(mod2_nic13, mod2_nic14, mod2_high, mod2_low,
     title = "Heterogeneity: Outsourcing",
     headers = c("Textiles", "Apparel", "High E_s", "Low E_s"),
-    tex = TRUE, file = "Output/stage2_heterogeneity_outsourcing.tex"
+    tex = TRUE, file = "Output/tex/stage2_heterogeneity_outsourcing.tex"
 )
 
 etable(mod1_nic13, mod1_nic14, mod1_high, mod1_low,
     title = "Heterogeneity: Wages",
     headers = c("Textiles", "Apparel", "High E_s", "Low E_s"),
-    tex = TRUE, file = "Output/stage2_heterogeneity_wages.tex"
+    tex = TRUE, file = "Output/tex/stage2_heterogeneity_wages.tex"
 )
 
 etable(mod2_nic13, mod2_nic14, mod2_high, mod2_low,
     headers = c("Textiles", "Apparel", "High E_s", "Low E_s"),
-    file = "Output/stage2_heterogeneity_outsourcing.csv"
+    file = "Output/csv/stage2_heterogeneity_outsourcing.csv"
 )
 
 etable(mod1_nic13, mod1_nic14, mod1_high, mod1_low,
     headers = c("Textiles", "Apparel", "High E_s", "Low E_s"),
-    file = "Output/stage2_heterogeneity_wages.csv"
+    file = "Output/csv/stage2_heterogeneity_wages.csv"
 )
 
-cat("\n  Saved: Output/stage2_heterogeneity_outsourcing.tex/.csv\n")
-cat("  Saved: Output/stage2_heterogeneity_wages.tex/.csv\n")
+cat("\n  Saved: Output/tex/stage2_heterogeneity_outsourcing.tex/.csv\n")
+cat("  Saved: Output/tex/stage2_heterogeneity_wages.tex/.csv\n")
 
 
 # =============================================================================

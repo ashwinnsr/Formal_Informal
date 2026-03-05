@@ -37,9 +37,9 @@ p <- list(
     b_W_AF = -0.0141, se_W_AF = 0.0272,
     b_W_Es = 0.1140, se_W_Es = 5.087,
     b_W_int = -0.0500, se_W_int = 0.3075,
-    b_N_lag = 0.9031, se_N_lag = 0.0461,
-    b_N_AF = -0.0153, se_N_AF = 0.0280,
-    b_N_Es = 0.1809, se_N_Es = 0.0890,
+    b_N_lag = 0.8503, se_N_lag = 0.0405,
+    b_N_AF = -0.0511, se_N_AF = 0.0567,
+    b_N_Es = -0.0857, se_N_Es = 0.2798,
     mean_ln_AF = 13.85,
     mean_Es = 0.223,
     mean_ln_N_inf = log(84.53),
@@ -200,8 +200,8 @@ cat("================================================================\n")
 cat("  % CHANGE FROM BASELINE\n")
 cat("================================================================\n")
 print(pct_tbl, n = 40)
-write_csv(pct_tbl, "Output/simulation_policy_summary_v4.csv")
-cat("Saved: Output/simulation_policy_summary_v4.csv\n\n")
+write_csv(pct_tbl, "Output/csv/simulation_policy_summary_v4.csv")
+cat("Saved: Output/csv/simulation_policy_summary_v4.csv\n\n")
 
 # =============================================================================
 # SECTION 5: FIGURE FUNCTION
@@ -311,15 +311,15 @@ p_C <- make_panel("Informal Employment", "ln Informal Employment",
     ggtitle("(C) Informal Employment Stock")
 
 # --- Save individual panels (wider format for standalone use) ---
-ggsave("Output/figure_policy_sim_A_outsourcing_v4.png",
+ggsave("Output/images/figure_policy_sim_A_outsourcing_v4.png",
     p_A,
     width = 8, height = 5, dpi = 300, bg = "white"
 )
-ggsave("Output/figure_policy_sim_B_wages_v4.png",
+ggsave("Output/images/figure_policy_sim_B_wages_v4.png",
     p_B,
     width = 8, height = 5, dpi = 300, bg = "white"
 )
-ggsave("Output/figure_policy_sim_C_employment_v4.png",
+ggsave("Output/images/figure_policy_sim_C_employment_v4.png",
     p_C,
     width = 8, height = 5, dpi = 300, bg = "white"
 )
@@ -351,11 +351,11 @@ fig_combined <- (p_A / p_B / p_C) +
         )
     )
 
-ggsave("Output/figure_policy_simulation_v4.png",
+ggsave("Output/images/figure_policy_simulation_v4.png",
     fig_combined,
     width = 8, height = 13, dpi = 300, bg = "white"
 )
-cat("Combined figure saved: Output/figure_policy_simulation_v4.png\n\n")
+cat("Combined figure saved: Output/images/figure_policy_simulation_v4.png\n\n")
 
 # =============================================================================
 # SECTION 7: LATEX TABLE
@@ -368,7 +368,7 @@ lt <- pct_tbl %>%
     mutate(Scenario = str_replace_all(Scenario, "%", "\\\\%")) %>%
     mutate(Scenario = str_replace_all(Scenario, "E\u209B", "$E_s$"))
 
-sink("Output/table_policy_simulation_v4.tex")
+sink("Output/tex/table_policy_simulation_v4.tex")
 cat("\\begin{table}[ht]\n  \\centering\n")
 cat("  \\caption{Policy Simulation: Percentage Change from Baseline at Period 10}\n")
 cat("  \\label{tab:policy_simulation}\n  \\small\n")
@@ -400,7 +400,7 @@ cat("    more informal workers are drawn into the system as enforcement rises,\n
 cat("    but their wages remain suppressed.\n")
 cat("  \\end{minipage}\n\\end{table}\n")
 sink()
-cat("LaTeX table saved: Output/table_policy_simulation_v4.tex\n")
+cat("LaTeX table saved: Output/tex/table_policy_simulation_v4.tex\n")
 
 # =============================================================================
 # SECTION 8: CONSOLE INTERPRETATION
@@ -429,10 +429,10 @@ cat("  regulatory pressure scales informal labour without improving\n")
 cat("  its terms.\n")
 cat("\n================================================================\n")
 cat("  v4 COMPLETE — output files:\n")
-cat("  Output/figure_policy_sim_A_outsourcing_v4.png\n")
-cat("  Output/figure_policy_sim_B_wages_v4.png\n")
-cat("  Output/figure_policy_sim_C_employment_v4.png\n")
-cat("  Output/figure_policy_simulation_v4.png  (combined)\n")
-cat("  Output/simulation_policy_summary_v4.csv\n")
-cat("  Output/table_policy_simulation_v4.tex\n")
+cat("  Output/images/figure_policy_sim_A_outsourcing_v4.png\n")
+cat("  Output/images/figure_policy_sim_B_wages_v4.png\n")
+cat("  Output/images/figure_policy_sim_C_employment_v4.png\n")
+cat("  Output/images/figure_policy_simulation_v4.png  (combined)\n")
+cat("  Output/csv/simulation_policy_summary_v4.csv\n")
+cat("  Output/tex/table_policy_simulation_v4.tex\n")
 cat("================================================================\n")

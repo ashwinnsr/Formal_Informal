@@ -1,0 +1,30 @@
+\begin{table}[htbp]
+	\centering
+	\footnotesize  % Reduce font size to help with width
+	\begin{talltblr}[
+		caption={Political Economy Mechanisms: Adverse Incorporation vs Displacement},
+		note{1}={+ p < 0.1, * p < 0.05, ** p < 0.01, *** p < 0.001},
+		note{2}={All models include industry (NIC 2-digit) fixed effects.},
+		note{3}={Standard errors clustered at state level.},
+		]{
+			colspec={Q[l]Q[c]Q[c]Q[c]Q[c]Q[c]},
+			rowhead=1,
+			hline{1,2,14}={1-6}{solid, black, 0.1em},
+			hline{3,13}={1-6}{solid, black, 0.05em},
+		}
+		& \SetCell{c} Monopsony: Pass-through & \SetCell{c} Monopsony: w/ Interaction & \SetCell{c} Adverse Inc: Density & \SetCell{c} Adverse Inc: w/ Scale & \SetCell{c} Cost-Shift: Mediation \\
+		Formal Productivity & \num{-0.014} & \num{0.001} & \num{-0.131} & \num{-0.058} & \num{0.144} \\
+		& (0.029) & (0.028) & (0.113) & (0.108) & (0.159) \\
+		Enforcement & \num{-0.534}* & \num{0.902} & \num{0.163} & \num{0.217} & \num{-0.372} \\
+		& (0.209) & (2.259) & (0.578) & (0.565) & (0.317) \\
+		Productivity × Enforcement &  & \num{-0.103} &  &  &  \\
+		&  & (0.161) &  &  &  \\
+		Formal Employment (log) &  &  &  & \num{-0.055} &  \\
+		&  &  &  & (0.066) &  \\
+		Outsourcing Intensity (log) &  &  &  &  & \num{-7.226}** \\
+		&  &  &  &  & (2.424) \\
+		Num.Obs. & 152 & 152 & 152 & 152 & 58 \\
+		R2 & 0.929 & 0.929 & 0.272 & 0.287 & 0.967 \\
+		R2 Adj. & 0.925 & 0.925 & 0.237 & 0.247 & 0.962 \\
+	\end{talltblr}
+\end{table}

@@ -1,0 +1,110 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+\titleformat{\section}{\large\bfseries\color{blue}}{Slide \thesection}{1em}{}
+\renewcommand{\thesection}{\arabic{section}}
+
+\title{Speaker Notes and Script: Dissertation Progress Report\\ \large Formal-Informal Linkages in Indian Textiles \& Apparel}
+\author{Ashwin}
+\date{February 20, 2026}
+
+\begin{document}
+
+\maketitle
+
+\section{Title Slide}
+\begin{itemize}
+    \item \textbf{Script:} ``Good morning/afternoon everyone. My name is Ashwin, and today I am presenting a progress report on Stage 1 of my dissertation analysis: \textit{Formal-Informal Linkages in Indian Textiles and Apparel Industries}.''
+    \item \textbf{Transition:} ``Let's jump into the outline of today's talk.''
+\end{itemize}
+
+\section{Outline}
+\begin{itemize}
+    \item \textbf{Script:} ``I'll start by defining the research questions and the theoretical framework. I'll then discuss the data sources (ASI and ASUSE 2023-24) and the methodology pivot we had to make due to data constraints. Finally, I'll present the main results, specifically our finding on outsourcing, and discuss the next steps.''
+\end{itemize}
+
+\section{Research Questions}
+\begin{itemize}
+    \item \textbf{Key Point:} We are looking at \textit{spillovers}.
+    \item \textbf{Script:} ``The core hypothesis is that what happens in the formal sector doesn't stay there. It spills over to the informal sector through two primary channels. First, the wage channel: does high productivity in formal firms lead to higher wages for informal workers? Second, the strategic outsourcing channel: do formal firms response to productivity gains or regulatory pressure by pushing more work into the informal sector?''
+    \item \textbf{Note on Moderator:} ``Critically, we look at how labor law enforcement moderates these relationships.''
+\end{itemize}
+
+\section{Theoretical Mechanism}
+\begin{itemize}
+    \item \textbf{Script:} ``This diagram illustrates the mechanism. Formal sector productivity ($A^f$) acts as the engine. It potentially flows into informal wages through demand for labor, or into outsourcing ($Q^{out}$) as a strategic choice. Labor enforcement ($E_s$) acts as a moderator, potentially making formal labor more expensive and thus making informal outsourcing more attractive.''
+\end{itemize}
+
+\section{Data Sources}
+\begin{itemize}
+    \item \textbf{Script:} ``We use the most recent 2023-24 rounds of two major datasets. For the formal sector, the Annual Survey of Industries (ASI), covering over 8,000 textile and apparel factories. For the informal sector, the ASUSE 2023-24, where we specifically filtered for 'job work' enterprises—those who specifically manufacture on contract for others.''
+    \item \textbf{Enforcement:} ``We manually integrated state-level enforcement ratios from the latest Ministry of Labour Annual Report.''
+\end{itemize}
+
+\section{Key Methodological Choice}
+\begin{itemize}
+    \item \textbf{Script:} ``I want to highlight a critical pivot in my methodology. Originally, I planned for a district-level analysis. However, the public-use ASI data suppresses district identifiers. To overcome this, I pivoted to a State-Industry level analysis. While we lose some granularity, this is actually theoretically robust because labor laws and their enforcement are state-level policies in India.''
+\end{itemize}
+
+\section{Variable Construction}
+\begin{itemize}
+    \item \textbf{Script:} ``This table shows our data cleaning logic. We've used standard constructs: output value for productivity and contract costs for outsourcing share. All dollar/rupee values are log-transformed and winsorized at 1\% to ensure outliers aren't driving our results.''
+\end{itemize}
+
+\section{Regression Models}
+\begin{itemize}
+    \item \textbf{Script:} ``We run two main models. Model 1 tests the wage channel with an interaction between enforcement and productivity. Model 2 tests the outsourcing channel, including a squared term for enforcement to catch any non-linear threshold effects. We include industry fixed effects to control for structural differences between making fabrics (textiles) and making shirts (apparel).''
+\end{itemize}
+
+\section{Sample Flow}
+\begin{itemize}
+    \item \textbf{Script:} ``Our final regression sample consists of 47 state-industry cells across 26 states. We had to drop 6 states where enforcement data was missing or unreliable in the annual report.''
+\end{itemize}
+
+\section{Descriptive Statistics}
+\begin{itemize}
+    \item \textbf{Script:} ``Briefly on the data: we have significant variation in our enforcement ratio ($E_s$), which ranges from 0 to 1. This variation is key to our identification strategy. You can also see a strong raw correlation (+0.28) between productivity and outsourcing, which we'll see confirmed in the regressions.''
+\end{itemize}
+
+\section{Main Regression Results}
+\begin{itemize}
+    \item \textbf{Script:} ``Here are the main results. In Model 1, our wage pass-through channel is currently not significant. This is likely due to the small sample size at the state level. HOWEVER, look at Model 2. We find a statistically significant positive coefficient (3.72e-06) on formal productivity for outsourcing intensity, with a p-value of 0.043.''
+\end{itemize}
+
+\section{Interpreting the Results}
+\begin{itemize}
+    \item \textbf{Script:} ``What does this mean? It means higher productivity in formal factories \textit{drives} more outsourcing to the informal sector. This supports the 'Specialization' hypothesis where more efficient formal firms focus on high-value tasks and push labor-intensive processes to informal job-work enterprises. Currently, enforcement doesn't seem to be the primary driver of this choice on its own, but the productivity link is robust.''
+\end{itemize}
+
+\section{Enforcement \& Wages Correlation}
+\begin{itemize}
+    \item \textbf{Script:} ``Interestingly, states with \textit{higher} enforcement have \textit{lower} informal wages (corr: -0.28). This suggests that strict enforcement might be creating barriers or costs for informal firms that prevent them from paying higher wages. This is an area for further investigation.''
+\end{itemize}
+
+\section{Limitations}
+\begin{itemize}
+    \item \textbf{Script:} ``Of course, there are limitations. Our sample size of 47 is lean for macro-level regressions. We also have 6 states dropped due to data missingness in the MoLE report. These are primarily small states or Union Territories, but also larger ones like West Bengal which were missing current inspection counts.''
+\end{itemize}
+
+\section{Next Steps}
+\begin{itemize}
+    \item \textbf{Script:} ``My next steps involve robustness checks—excluding outliers like Manipur and testing alternative enforcement indices like the Besley-Burgess index. Long-term, I hope to pool the 2022-23 rounds to create a two-period panel and increase statistical power.''
+\end{itemize}
+
+\section{Summary}
+\begin{itemize}
+    \item \textbf{Script:} ``To summarize: Stage 1 is technically complete. We have successfully linked the formal and informal datasets. Our strongest finding is that formal productivity significantly fuels the informal job-work sector through outsourcing. This confirms the deep integration of the two sectors in India's textiles value chain.''
+\end{itemize}
+
+\section*{Potential Questions \& Answers}
+\begin{description}
+    \item[Q: Why is Model 1 (Wages) insignificant?] \textbf{A:} With 47 observations and cross-sectional data, we only capture a snapshot. Wage transmission is often stickier than outsourcing decisions, which can be adjusted more quickly in response to productivity shifts.
+    \item[Q: Why use \texttt{contract\_manuf\_service = 1} as the job work filter?] \textbf{A:} The narrower 'nature of operation' code only yielded 30 enterprises. To capture a statistically representative sample of subcontracted manufacturing, the contract service flag is the standard approach in the NSS/ASUSE literature.
+\end{description}
+
+\end{document}

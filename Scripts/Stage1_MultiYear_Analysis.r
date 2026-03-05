@@ -284,7 +284,7 @@ cat(sprintf("\nTotal ASI cells: %d, Total ASUSE cells: %d\n", nrow(asi_all_years
 
 cat("\nPHASE 5: CREATING MASTER DATASET\n")
 
-enforcement_data <- read_csv("Data/External/State_Enforcement.csv", show_col_types = FALSE) %>%
+enforcement_data <- read_csv("Data/External/State_Enforcement_2023.csv", show_col_types = FALSE) %>%
     rename(E_s = names(.)[grep("E_s", names(.), ignore.case = TRUE)][1]) %>%
     mutate(State_Code = sprintf("%02d", as.integer(State_Code)), E_s = as.numeric(E_s)) %>%
     filter(!is.na(E_s)) %>%
@@ -305,8 +305,8 @@ master_df$ln_w_inf <- winsorize_manual(master_df$ln_w_inf)
 master_df$ln_A_formal <- winsorize_manual(master_df$ln_A_formal)
 master_df$ln_Q_out <- winsorize_manual(master_df$ln_Q_out)
 
-write_csv(master_df, "Output/multiyear_master_df.csv")
-cat(sprintf("\nSaved integrated master dataset with formalized wages to Output/multiyear_master_df.csv\n"))
+write_csv(master_df, "Output/csv/multiyear_master_df.csv")
+cat(sprintf("\nSaved integrated master dataset with formalized wages to Output/csv/multiyear_master_df.csv\n"))
 
 # =============================================================================
 # PHASE 7+: ANALYSIS & OUTPUT
@@ -335,12 +335,12 @@ for (y in levels(master_df$Year)) {
 }
 
 # Save
-etable(mod1_pooled, tex = TRUE, file = "Output/multiyear_model1_pooled.tex")
-etable(mod1_pooled, file = "Output/multiyear_model1_pooled.csv")
+etable(mod1_pooled, tex = TRUE, file = "Output/tex/multiyear_model1_pooled.tex")
+etable(mod1_pooled, file = "Output/csv/multiyear_model1_pooled.csv")
 if (length(year_models) > 0) {
-    do.call(etable, c(year_models, list(tex = TRUE, file = "Output/multiyear_model1_yearly.tex")))
+    do.call(etable, c(year_models, list(tex = TRUE, file = "Output/tex/multiyear_model1_yearly.tex")))
 }
-etable(mod2_pooled, tex = TRUE, file = "Output/multiyear_model2_pooled.tex")
+etable(mod2_pooled, tex = TRUE, file = "Output/tex/multiyear_model2_pooled.tex")
 
 cat("\nResults saved to Output/ directory.\n")
 # =============================================================================
@@ -368,7 +368,7 @@ p1 <- ggplot(master_df, aes(x = ln_A_formal, y = ln_w_inf, color = Enforcement_L
     theme_minimal() +
     scale_color_manual(values = c("High Enforcement" = "#2c7bb6", "Low Enforcement" = "#d7191c"))
 
-ggsave("Output/figure1_wage_passthrough.png", p1, width = 8, height = 6, dpi = 300)
+ggsave("Output/images/figure1_wage_passthrough.png", p1, width = 8, height = 6, dpi = 300)
 
 # Figure 2: Model 2 - Outsourcing Intensity and Productivity
 p2 <- ggplot(master_df, aes(x = ln_A_formal, y = ln_Q_out)) +
@@ -382,7 +382,7 @@ p2 <- ggplot(master_df, aes(x = ln_A_formal, y = ln_Q_out)) +
     ) +
     theme_minimal()
 
-ggsave("Output/figure2_outsourcing_intensity.png", p2, width = 8, height = 6, dpi = 300)
+ggsave("Output/images/figure2_outsourcing_intensity.png", p2, width = 8, height = 6, dpi = 300)
 
 # Figure 3: Enforcement Distribution
 p3 <- ggplot(enforcement_data, aes(x = reorder(State_Name, E_s), y = E_s)) +
@@ -395,7 +395,7 @@ p3 <- ggplot(enforcement_data, aes(x = reorder(State_Name, E_s), y = E_s)) +
     ) +
     theme_minimal()
 
-ggsave("Output/figure3_enforcement_map.png", p3, width = 8, height = 8, dpi = 300)
+ggsave("Output/images/figure3_enforcement_map.png", p3, width = 8, height = 8, dpi = 300)
 
 cat("Figures saved to Output/ directory.\n")
 cat("\nANALYSIS COMPLETE.\n")

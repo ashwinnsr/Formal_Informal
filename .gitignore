@@ -3,7 +3,6 @@ ASI_Data/
 ASUSE_Data/
 Data/
 *.csv
-!Output/*.csv
 !Scripts/*.csv
 
 # R Project Files
@@ -25,7 +24,6 @@ R_libs/
 *.fls
 *.run.xml
 *.bcf
-*.tex 
 
 # PDFs (Ignore all, except final dissertation/presentation)
 *.pdf
@@ -36,7 +34,6 @@ R_libs/
 *.txt
 !README*.md
 !Docs/*.md
-!*.tex
 stage1_robustness_debug.log
 analysis_log.txt
 tmp_vars_output.txt
