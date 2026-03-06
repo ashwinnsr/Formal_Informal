@@ -1,13 +1,13 @@
 \chapter{Theoretical Framework}\label{chap:theory}
 
-In this chapter, I formalize the theoretical model that guides my empirical strategy. This framework provides a rigorous foundation for the political economy tests conducted in the subsequent analysis, moving beyond a simple "transitional" view of informality toward a structuralist understanding of extraction and displacement.
+In this chapter, I develop the theoretical model that motivates and disciplines my empirical strategy. This framework is not intended to produce direct estimates of structural parameters; rather, it serves to \textbf{derive qualitative predictions} that can be tested through reduced-form political economy analysis. By formalizing the incentive structure of formal-informal linkages, the model makes clear what empirical patterns we should observe under each competing hypothesis, and what we should \textit{not} observe.
 
-Unlike traditional dualist models that view informality as a transitory friction, the framework developed here treats the formal-informal linkage as a structural feature of modern production. By modeling the "Make vs. Buy" decision through a lens of bargaining and power, I derive testable predictions about how productivity gains, institutional enforcement, and Global Value Chain (GVC) structures shape the distribution of economic surplus. This theoretical foundation serves as the benchmark for adjudicating between the \textit{displacement} and \textit{adverse incorporation} hypotheses.
+Unlike traditional dualist models that view informality as a transitory friction, the framework treats the formal-informal linkage as a structural feature of modern production. By modeling the ``Make vs.\,Buy'' decision through a lens of bargaining and power, I derive testable predictions about how productivity gains, institutional enforcement, and Global Value Chain (GVC) logics shape the \textit{distribution} of economic surplus. These predictions form the benchmark for adjudicating between the \textit{displacement} and \textit{adverse incorporation} hypotheses.
 
 \section{Model Specification}
-The central empirical challenge of this dissertation is to distinguish between two competing explanations for low informal sector wages in India's textile value chains. The displacement view attributes wage gaps to technological backwardness: informal firms simply produce less value per worker due to obsolete equipment and limited scale. The extraction (or adverse incorporation) view attributes wage gaps to unequal bargaining power: formal buyers can exploit their monopsony position to appropriate most of the surplus. 
+The central theoretical challenge is to distinguish between two competing explanations for persistent informal sector wage suppression. The \textbf{displacement view} attributes wage gaps to technological backwardness: informal firms produce less value per worker due to limited scale and obsolete equipment, and the gap closes naturally as formal productivity rises. The \textbf{adverse incorporation view} attributes wage suppression to structural power asymmetries: formal buyers exploit monopsony positions to appropriate productivity gains while suppressing the prices paid to informal suppliers.
 
-To disentangle these mechanisms, I develop a structural model with four core components: The Decision to Outsource, The Institutional Bargaining Game, the Monopsony-GVC Logic, and the Industrial Density Mechanism.
+To derive testable predictions from these competing views, I develop a conceptual model with four components: the firm's decision to outsource, the bargaining game over task prices, the Monopsony-GVC mechanism, and the industrial density effect.
 
 \subsection{The Decision to Outsource}
 
@@ -132,34 +132,33 @@ For empirical implementation, I approximate this with a linear reduced form:
 
 \textbf{Hypothesis:} $\beta_1 > 0$. States with stricter enforcement exhibit higher informal bargaining power, manifesting as greater ``pass-through'' of formal sector productivity gains to informal wages.
 
-\subsection{Equilibrium Specification}
+\subsection{From Theory to Reduced-Form Predictions}
+\label{subsec:predictions}
 
-To make the model tractable for a Master's thesis, I adopt a \textbf{partial equilibrium} framework with the following assumptions:
+The model above is not directly estimated as a structural system --- the substitution parameter $\rho$ and the bargaining power $\mu_s$ are not identified as point estimates in the empirical analysis. This approach aligns with a robust tradition in labour economics of using micro-founded models to \textit{motivate} and \textit{discipline} reduced-form regressions rather than calibrating them via structural methods \autocite{Angrist2010}.
 
-\begin{enumerate}
-	\item \textbf{Product market:} Formal firms are price-takers in the output market (perfect competition). This allows me to treat output price $P$ as exogenous.
-	
-	\item \textbf{Firm entry:} The number and productivity distribution of formal firms in each district-industry is taken as given (no entry/exit dynamics). This is justified by the cross-sectional nature of the data.
-	
-	\item \textbf{Informal supply:} Informal suppliers are atomistic. Each district-industry has a large number of informal firms with marginal cost $MC_{\text{inf}}$ determined by local factor costs (wages, materials). Informal capacity is assumed elastic within the cross-section.
-	
-	\item \textbf{Market clearing:} For a given district-industry, total demand for outsourced tasks by formal firms equals total supply from informal firms. This pins down the equilibrium quantity $M_{\text{inf}}$.
-\end{enumerate}
+The value of the framework lies in what it implies about the \textit{direction and pattern} of observable reduced-form coefficients. Table~\ref{tab:predictions} summarizes the core predictions:
 
-These assumptions allow me to focus on the \textit{distribution} of surplus (via $\mu_s$) conditional on productivity and costs, rather than modeling the full general equilibrium.
+\begin{table}[H]
+\centering
+\caption{Theoretical Predictions under Competing Hypotheses}
+\label{tab:predictions}
+\small
+\begin{tabular}{llcc}
+\toprule
+Mechanism & Empirical Test & Displacement Prediction & Adverse Incorporation Prediction \\
+\midrule
+Outsourcing elasticity & $\frac{\partial \ln Q_{out}}{\partial \ln A_F}$ & $< 0$ (substitution) & $> 0$ (regulatory arbitrage) \\
+Wage pass-through & $\frac{\partial \ln w_{inf}}{\partial \ln A_F}$ & $> 0$ (shared gains) & $\approx 0$ (monopsony) \\
+Enforcement interaction & $\frac{\partial w_{inf}}{\partial (E_s \times A_F)}$ & Flat & $> 0$ (enforcement enables sharing) \\
+Cost-shifting & $\frac{\partial w_{inf}}{\partial Q_{out}}$ & $0$ & $< 0$ (volume suppresses price) \\
+Structural persistence & $\beta_1$ in AR(1) & $\to 0$ (convergence) & $\approx 1$ (lock-in) \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-\subsection{Interpretation: What $\mu_s$ Actually Captures}
-\label{subsec:mu_interpretation}
+The key insight is that \textbf{the sign and significance of these reduced-form coefficients is itself the test of the theoretical mechanism}. A positive outsourcing elasticity implies that $\sigma > 1$ (substitution) and that enforcement pressure ($E_s$) raises relative informal task costs. A null wage pass-through coefficient implies that $\mu_s \approx 0$ at the margin: formal firms capture productivity gains because informal suppliers have no credible outside option to negotiate a higher share. I do not need to calculate $\mu_s = 0.05$ to make this inference; observing $\beta_{wages} \approx 0$ \textit{across all enforcement environments} is precisely what $\mu_s \approx 0$ would imply.
 
-The estimated bargaining power parameter $\mu_s$ should be interpreted as a \textbf{reduced-form parameter} that captures the net effect of enforcement on surplus distribution. It implicitly embeds three distinct mechanisms:
+This strategy has two advantages over structural calibration. First, it is robust to model misspecification in the CES production function: even if the exact functional form is wrong, the qualitative predictions about signs and interactions remain valid under more general substitution structures. Second, it allows me to test each mechanism separately using the best-suited identification strategy for each prediction, rather than jointly estimating a system that relies on strong functional form assumptions throughout.
 
-\begin{enumerate}
-	\item \textbf{Direct outside option effect:} $\pi(E_s)$ raises the credibility of formal employment as an alternative for informal workers.
-	
-	\item \textbf{Job availability effect:} Conditional on enforcement, the actual density of formal jobs in the local labor market determines whether the outside option is accessible. Even with perfect enforcement, if formal jobs are scarce ($D_s$ is low), workers' bargaining position remains weak.
-	
-	\item \textbf{Firm strategic response:} Enforcement may change firms' make-or-buy decisions, shifting the composition of tasks allocated to informal suppliers. If firms respond to stricter regulation by outsourcing more labor-intensive tasks, this could paradoxically increase informal employment while affecting bargaining dynamics.
-\end{enumerate}
-
-Our empirical strategy disentangles mechanism (1) from (2) through the interaction of enforcement and productivity in the reduced-form analysis, and tests for (3) through the outsourcing intensity mediation. The bargaining power parameter $\mu_s$ thus represents the \textbf{equilibrium bargaining power} after accounting for these combined forces, providing the analytical basis for evaluating the comparative dynamics of productivity shocks and institutional change.
-
+The four core empirical tests --- Strategic Outsourcing, Wage Pass-Through, Persistence, and Cost-Shifting --- are thus the \textit{reduced-form equivalent} of the structural tests this model motivates. Each test maps directly onto a parameter or mechanism in the theoretical framework, as detailed in Chapter~\ref{chap:methodology}.
