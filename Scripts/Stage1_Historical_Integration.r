@@ -2,7 +2,7 @@
 # STAGE 1b: HISTORICAL INTEGRATION — NSS 67th (2010-11) & NSS 73rd (2015-16)
 #
 # Mirrors Stage1_MultiYear_Analysis.r but for historical survey rounds.
-# Reads ASI + ASUSE blocks for 2010-11 and 2015-16, creates state × NIC-2digit
+# Reads ASI + ASUSE blocks for (2020-21, 2021-22 and 2023-24), Unincorporated Non-Agricultural Enterprises 2015-16 and Survey on Unincorporated Non-Agricultural Enterprises 2010-11 creates state × NIC-2digit
 # panels, deflates wages to real 2010-11 prices, and combines with the modern
 # ASUSE (2021-24) master for long-run surplus distribution analysis.
 #
@@ -269,7 +269,17 @@ merge_y <- function(asi, asuse, label) {
         inner_join(asuse, by = c("State_Code", "NIC_2digit", "Year")) %>%
         left_join(enf[[label]], by = "State_Code") %>%
         filter(!is.na(E_s)) %>%
-        mutate(w_inf_real = w_inf_mean * defl[[label]], ln_w_inf_real = log(w_inf_real), ln_A_formal = log(A_formal), ln_Q_out = log(Q_out_mean + 1))
+        mutate(
+            # Real wages (Deflated to 2010-11)
+            w_inf_real = w_inf_mean * defl[[label]],
+            ln_w_inf_real = log(w_inf_real),
+
+            # Real Productivity (Deflated to 2010-11)
+            # CRITICAL: Fix for the ln(8) vs ln(15) discrepancy
+            A_formal_real = A_formal * defl[[label]],
+            ln_A_formal_real = log(A_formal_real),
+            ln_Q_out = log(Q_out_mean + 1)
+        )
 }
 
 hist_df <- bind_rows(merge_y(asi_10, asuse_10, "2010-11"), merge_y(asi_15, asuse_15, "2015-16"))
@@ -288,12 +298,27 @@ if (file.exists("Output/csv/multiyear_master_df.csv")) {
     common <- c("State_Code", "State_Name", "NIC_2digit", "Year", "E_s", "A_formal", "w_for_mean", "Q_out_mean", "w_inf_real", "N_informal", "N_firms", "L_formal_total")
     longrun <- bind_rows(
         hist_df %>% select(any_of(common)) %>% mutate(NIC_2digit = as.character(NIC_2digit)),
-        modern %>% select(any_of(common)) %>% mutate(NIC_2digit = as.character(NIC_2digit))
+        modern %>%
+            mutate(
+                # CRITICAL: Modern ASI (2021+) Output is in THOUSANDS in raw data
+                # If MultiYear script hasn't already multiplied, we do it here
+                A_formal = ifelse(Year %in% c("2021-22", "2022-23", "2023-24") & A_formal < 100000, A_formal * 1000, A_formal)
+            ) %>%
+            select(any_of(common)) %>%
+            mutate(NIC_2digit = as.character(NIC_2digit))
     ) %>%
-        mutate(Year = as.factor(Year), ln_w_inf = log(w_inf_real), ln_A_formal = log(A_formal), ln_Q_out = log(Q_out_mean + 1))
+        mutate(
+            Year = as.factor(Year),
+            # Apply year-specific deflator to Productivity as well
+            defl_val = unlist(defl)[as.character(Year)],
+            A_formal_real = A_formal * defl_val,
+            ln_w_inf = log(w_inf_real),
+            ln_A_formal = log(A_formal_real),
+            ln_Q_out = log(Q_out_mean + 1)
+        )
 
     write_csv(longrun, "Output/csv/combined_longrun_df.csv")
-    cat(sprintf("\nDone! Full long-run panel saved to Output/csv/combined_longrun_df.csv (%d rows, %d years)\n", nrow(longrun), length(unique(longrun$Year))))
+    cat(sprintf("\nDone! Full long-run panel (REAL Prices) saved to Output/csv/combined_longrun_df.csv (%d rows, %d years)\n", nrow(longrun), length(unique(longrun$Year))))
 } else {
     cat(sprintf("\nDone! Historical panel saved: Output/csv/historical_panel_df.csv (%d rows)\n", nrow(hist_df)))
 }

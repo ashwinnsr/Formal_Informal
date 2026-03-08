@@ -52,6 +52,15 @@ source("Scripts/Stage4_Robustness_Diagnostics.r")
 cat("\n--- STEP 7: Policy Simulation (Monte Carlo) ---\n")
 source("Scripts/Stage5_Policy_Simulation.r")
 
+# Step 8: Alternative Econometric Models (PhD Syllabus)
+#   Runs: Quantile Reg, Tobit, Negative Binomial, SUR, IV/2SLS, PSM
+#   Creates: Output/csv/alternative_models_comparison.csv
+#            Output/tex/table_alternative_models.tex
+#            Output/images/figure_quantile_wages.png
+#            Output/images/figure_psm_balance.png
+cat("\n--- STEP 8: Alternative Econometric Models (PhD Syllabus) ---\n")
+source("Scripts/Stage6_Alternative_Models.r")
+
 cat("\n================================================================\n")
 cat("   FULL ANALYSIS PIPELINE COMPLETE\n")
 cat("================================================================\n")

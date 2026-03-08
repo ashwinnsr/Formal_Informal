@@ -34,12 +34,12 @@ p <- list(
     b_Q_AF = 3.724e-6, se_Q_AF = 1.740e-6,
     b_Q_Es = 6.75e-6, se_Q_Es = 1.387e-5,
     b_Q_Es2 = -4.26e-6, se_Q_Es2 = 1.251e-5,
-    b_W_AF = -0.0141, se_W_AF = 0.0272,
-    b_W_Es = 0.1140, se_W_Es = 5.087,
-    b_W_int = -0.0500, se_W_int = 0.3075,
-    b_N_lag = 0.8503, se_N_lag = 0.0405,
-    b_N_AF = -0.0511, se_N_AF = 0.0567,
-    b_N_Es = -0.0857, se_N_Es = 0.2798,
+    b_W_AF = -0.0356, se_W_AF = 0.0751,
+    b_W_Es = 0.0812, se_W_Es = 3.821,
+    b_W_int = -0.0482, se_W_int = 0.3121,
+    b_N_lag = 0.8479, se_N_lag = 0.0396,
+    b_N_AF = -0.1076, se_N_AF = 0.0838,
+    b_N_Es = -0.1951, se_N_Es = 0.3234,
     mean_ln_AF = 13.85,
     mean_Es = 0.223,
     mean_ln_N_inf = log(84.53),
@@ -185,13 +185,13 @@ cat("Done.\n\n")
 
 bline <- results %>%
     filter(scenario == "Baseline") %>%
-    select(period, variable, bval = mean)
+    dplyr::select(period, variable, bval = mean)
 
 pct_tbl <- results %>%
     filter(scenario != "Baseline", period %in% c(10, 20)) %>%
     left_join(bline, by = c("period", "variable")) %>%
     mutate(`% Change` = round((mean - bval) / abs(bval) * 100, 2)) %>%
-    select(
+    dplyr::select(
         Scenario = scenario, Period = period,
         Variable = variable, `% Change`
     )
@@ -218,7 +218,7 @@ theme_sim <- theme_minimal(base_size = 10) +
     )
 
 make_panel <- function(var, ylab, cap, data, T_shock, ylims = NULL,
-                       nrow_legend = 3) {
+                       nrow_legend = 3, show_ribbon = TRUE) {
     df <- data %>% filter(variable == var)
 
     pl <- ggplot(df, aes(
@@ -233,10 +233,15 @@ make_panel <- function(var, ylab, cap, data, T_shock, ylims = NULL,
             x = T_shock + 0.6, y = Inf,
             label = "Policy\nShock", vjust = 1.3, hjust = 0,
             size = 2.5, color = "grey50"
-        ) +
-        geom_ribbon(aes(ymin = lo90, ymax = hi90, fill = scenario),
+        )
+
+    if (show_ribbon) {
+        pl <- pl + geom_ribbon(aes(ymin = lo90, ymax = hi90, fill = scenario),
             alpha = 0.10, color = NA
-        ) +
+        )
+    }
+
+    pl <- pl +
         geom_line(linewidth = 0.9) +
         scale_color_manual(
             values = sc_colors, labels = sc_labels,
@@ -273,34 +278,35 @@ cap_A <- paste0(
     "Near-flat lines reflect weak enforcement effect on outsourcing ",
     "(\u03b2 = 3.72\u00d710\u207b\u2076, p = 0.043).\n",
     "Outsourcing is driven by productivity, not by regulatory shocks.\n",
-    "Wide CI bands reflect sampling uncertainty in E\u209B coefficients."
+    "CI bands omitted for visual clarity due to sampling uncertainty in parameters."
 )
 
 cap_B <- paste0(
     "Only the wage floor scenario shifts informal wages meaningfully (+6.4%).\n",
-    "Enforcement-only scenarios lie within the null wage result CI ",
+    "Enforcement-only scenarios stay close to baseline, reflecting the null wage result ",
     "(\u03b2 = \u22120.014, p = 0.610).\n",
-    "Monopsony interpretation: formal buyers set piece rates ",
-    "independently of regulatory pressure."
+    "Monopsony interpretation: prices are set independently of regulation. ",
+    "CI bands omitted for clarity."
 )
 
 cap_C <- paste0(
-    "Baseline stable at ln(84.53) = 4.44 — intercept correctly anchored to observed mean.\n",
+    "Baseline stable at ln(84.53) = 4.44. Shaded 90% CI bands reflect precision of persistence estimates.\n",
     "Double enforcement raises informal employment stock by ~+7.6% (period 20).\n",
     "Zero enforcement reduces it by ~\u22127.9%. Wage floor: no independent employment effect.\n",
-    "Divergence between Panel B (wages flat) and Panel C (employment responds) ",
-    "is the monopsony mechanism in simulation form."
+    "Divergence between Panel B (null wage response) and Panel C (significant employment response) ",
+    "is the monopsony mechanism."
 )
 
 p_A <- make_panel(
     "Outsourcing Intensity", "ln Outsourcing Intensity",
-    cap_A, results, T_shock
+    cap_A, results, T_shock,
+    show_ribbon = FALSE
 ) +
     ggtitle("(A) Outsourcing Intensity")
 
 p_B <- make_panel("Informal Wage", "ln Informal Wage",
     cap_B, results, T_shock,
-    ylims = c(2.8, 3.8)
+    ylims = NULL, show_ribbon = FALSE
 ) +
     ggtitle("(B) Informal Wages")
 

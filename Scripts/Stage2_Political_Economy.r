@@ -413,7 +413,7 @@ p_pe1 <- ggplot(plot_df, aes(x = ln_A_formal, y = ln_w_inf, color = Enforcement)
     scale_color_manual(values = c("High (Strong Institutions)" = "#2166ac", "Low (Weak Institutions)" = "#b2182b")) +
     labs(
         title = "Test 1: Monopsony and Productivity Pass-Through",
-        subtitle = "Formal productivity growth only lifts informal wages where labor institutions are strong",
+        subtitle = "Informal wages remain stagnant regardless of state labor enforcement intensity",
         x = "Formal Sector Productivity (ln A_f)",
         y = "Informal Sector Wage (ln w_inf)",
         color = "State Enforcement"

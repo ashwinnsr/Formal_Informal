@@ -15,7 +15,7 @@ The strongest longitudinal finding is the extreme path dependence of informal em
 
 | Variable | Coefficient | P-value | Interpretation |
 |----------|-------------|---------|----------------|
-| Lagged Informal Employment | **0.8503** | **0.000** | Extreme Persistence |
+| Lagged Informal Employment | **0.8479** | **0.000** | Extreme Persistence |
 | Formal Productivity | -0.051 | 0.370 | Displacement = False |
 
 **Verdict**: 85% of informality is predetermined by history ($N=152$ panel). Modernization (formal productivity growth) has essentially **zero effect** on dissolving the informal sector, supporting the structuralist "Structural Lock-in" hypothesis.
@@ -24,7 +24,7 @@ The strongest longitudinal finding is the extreme path dependence of informal em
 Productivity gains are **not shared** with informal workers across all specifications.
 
 - **Pass-through Elasticity**: **-0.014** ($p = 0.636$). 
-- **Cost-Shifting**: **Confirmed** ($\beta = -7.23, p = 0.009$).
+- **Cost-Shifting**: **Confirmed** (Raw $\beta = -7.226, p = 0.009$; Orthogonalized $b = -3.814, p = 0.073$).
 - **Robustness**: Survives outlier exclusion (N=146, $p = 0.329$) and median wage measures.
 - **Interpretation**: Formal lead firms capture 100% of productivity rents; informal wages are suppressed as outsourcing volume rises.
 

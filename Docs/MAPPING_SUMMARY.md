@@ -1,152 +1,53 @@
-# Data Mapping Summary - Ready for Final Analysis Script
+# Dataset Mapping & Block Integration Summary
 
-## Test Results - Confirmed Working Numbers
-
-### ASI (Formal Sector)
-- **Total textile/apparel factories**: 8,137
-  - Textiles (NIC 13): 4,692
-  - Apparel (NIC 14): 3,445
-
-### ASUSE (Informal Sector)  
-- **Total textile/apparel enterprises**: 67,052
-- **Job work enterprises** (contract_manuf_service = 1): **7,519** ✅
-  - This gives ~200-300 per state-industry
-
-### Geographic Level Decision
-**Use STATE-INDUSTRY aggregation** (not district) because geographic codes are suppressed
+This document details the mapping of data blocks across ASI and all ASUSE/NSS rounds (2010–2024), documenting the schema challenges and the programmatic resolutions implemented in the analysis pipeline.
 
 ---
 
-## Variable Mappings - Confirmed
+## 1. Block Mapping Master Table
 
-### ASI Block A (Identification)
-```r
-Factory_ID = a1
-NIC_Code = a5
-Multiplier = mult
-# Note: State/district suppressed - will need alternative approach
-```
+The analysis integrates variables from three distinct survey frameworks. The following table maps the primary concepts to their respective file blocks.
 
-### ASI Block E (Employment)
-**Structure**: Long format - 10 rows per factory
-
-```r
-Factory_ID = AE01
-Worker_Category = EI1  # Values 1-10
-Mandays_Male = EI3     # 362,934 non-zero values
-Mandays_Female = EI4   # 19,614 non-zero values  
-Mandays_Total = EI5    # 367,953 non-zero values
-Workers = EI6          # 377,426 non-zero values
-Mandays_Worked = EI7   # 367,960 non-zero values
-Wages = EI8            # Wage/emolument value
-```
-
-**To calculate total employment**: Sum EI7 (Mandays_Worked) across all worker categories, then divide by 300
-
-### ASI Block F (Expenses)
-**Structure**: One row per factory
-
-```r
-Factory_ID = AF01
-# Need to verify from codebook which F column is contract work
-# Best candidates based on prevalence:
-#   F5: 49,045 non-zero (most likely - common expense)
-#   F6: 10,474 non-zero (alternative - less common, might be contract-specific)
-```
-
-**ACTION NEEDED**: Check `ASI_Data/ASI_Info/f.Codelist24 (2).pdf` to identify which F column represents "Cost of contract and commission work done by others"
-
-### ASI Block J (Output/GVA)
-**Structure**: Long format - multiple rows per factory
-
-```r
-Factory_ID = AJ01
-Item_Code = J11
-Product_Code = J13
-# Need to identify which J columns are GVA and Total_Output
-```
-
-**ACTION NEEDED**: Check codebook to find GVA and Output columns
+| Concept | ASI (Formal) | NSS 67 (2010-11) | NSS 73 (2015-16) | ASUSE (2021-24) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Identification/ID** | Block A | Block 1 | Block 1 | Block 2 |
+| **NIC Code (Industry)**| Block A (`nic5digit`) | Block 2 (`b2_q202`) | Block 2 (`b2_q202`) | Block 2 (`major_nic_5dig`) |
+| **Job-Work Filter** | N/A (Lead Firm) | Block 2 (`b2_q239`) | Block 2 (`b2_q239`) | Block 2 (`contract_manuf_service`) |
+| **Hired Employment** | Block E (`EI6/tmanday`) | Block 8 (Item 801) | Block 8 (Item 801) | Block 4 (Item 511) |
+| **Wages/Emoluments** | Block E (`EI8/wages`) | Block 12 (Item 1201) | Block 15 (Item 1502\_3) | Block 5 (Item 559) |
+| **Outsourcing Cost** | Block F (`workdoneby`) | N/A | N/A | N/A |
+| **Total Output/GVA** | Block J (`exfactval`) | Block 12 (Item 1209) | Block 15 (Item 1507\_3) | N/A |
+| **Multiplier (Weight)**| Block A (`multiplier`) | Block 1 (`wgt_combined`) | Block 1 (`mlt`) | Block 2 (`mlt`) |
 
 ---
 
-### ASUSE Block 2 (Characteristics)
-**Structure**: One row per enterprise
+## 2. Key Problems Faced & Resolutions
 
-```r
-Enterprise_ID = paste(fsu_serial_no, sample_est_no, sep="_")
-District = district
-NIC_2digit = substr(major_nic_5dig, 1, 2)
-NIC_5digit = major_nic_5dig
-Job_Work_Flag = contract_manuf_service  # Use value "1" for job work
-Multiplier = mlt
-```
+### A. Schema Inconsistency across Rounds
+*   **Problem**: Variable names and item codes for "Job Work" and "Wages" changed in every round (e.g., from `b2_q239` to `contract_manuf_service`).
+*   **Resolution**: Implemented **Year-Specific Loaders** in `Stage1_Historical_Integration.r` and `Stage1_MultiYear_Analysis.r`. These functions act as an abstraction layer, mapping disparate raw column names to a unified internal tibble schema (`Factory_ID`, `L_formal_firm`, `w_informal_firm`, etc.).
 
-### ASUSE Block 5 (Wages/Expenses)
-**Structure**: Long format with item codes
+### B. Semi-Round Data Segmentation (2015-16)
+*   **Problem**: The NSS 73rd round was released in two "semi-rounds" with inconsistent multi-level file paths (using both spaces and hyphens in directory names).
+*   **Resolution**: Developed a recursive mapping function (`load_s`) that iterate through both semi-round directories, cleans the mismatched file names, and concatenates the results into a single balanced cohort using `bind_rows`.
 
-```r
-Enterprise_ID = paste(fsu_serial_no, sample_est_no, sep="_")
-Item_Code = item_no
-Value = value_rs
-Multiplier = mlt
-```
+### C. Nominal vs. Real Wage Comparability
+*   **Problem**: Comparing 2010 wages (avg ~50k) to 2024 wages (avg ~300k) is invalid due to inflation.
+*   **Resolution**: Created a **CPI-Linked Deflator** system. We linked the CPI-IW (Base 2001) to the modern CPI (Base 2012) using a 1.95 linking factor. All financial variables are now deflated to constant **2010-11 Real Prices**.
 
-**Most common item codes** (from test):
-- 569: 141,763 occurrences
-- 559: 141,744 occurrences  
-- 589: 119,470 occurrences
-- 579: 119,433 occurrences
-- 571: 118,554 occurrences
+### D. Block-Level Joining (Internal Coherence)
+*   **Problem**: Joining Block 2 (ID) with Block 5 (Wages) in ASUSE often dropped observations because identifier columns (FSU Serial No, Sample Est No) were formatted differently across blocks.
+*   **Resolution**: Implemented a composite **Enterprise_ID** key: `paste(fsu_serial_no, sample_est_no, sep = "_")`. This guaranteed a unique, stable link across all levels of the survey data.
 
-**ACTION NEEDED**: Check `ASUSE_Data/ASUSE_Info/NSS_ASUSE_23_24_Layout_mult_post (2)(3).xlsx` to find:
-1. Item code for "Hired worker emoluments/wages"
-2. Item code for "Number of hired workers"
-
-**Note**: These might be in items 550-599 range (operating expenses)
+### E. Geographic Suppression
+*   **Problem**: Direct district-level codes are often suppressed or masked in public-use files (ASI vs. ASUSE codes don't match exactly).
+*   **Resolution**: Standardized on **State-Industry (2-digit NIC)** as the primary unit of observation. This ensures sufficient sample density per cell (~200+ informal enterprises per state-industry) while maintaining geographic granularity for the Political Economy tests.
 
 ---
 
-## Critical Decisions Made
+## 3. Cleaning & Validation Logic
 
-1. ✅ **Geographic aggregation**: STATE-INDUSTRY (not district-industry)
-2. ✅ **Job work definition**: `contract_manuf_service = 1` (gives 7,519 enterprises)
-3. ✅ **Employment measure**: Sum EI7 across worker categories ÷ 300
-4. ⏳ **Outsourcing expense**: Pending codebook verification (likely F5 or F6)
-5. ⏳ **ASUSE wage items**: Pending codebook verification
-
----
-
-## Next Steps
-
-### Option A: Proceed with Best Guesses
-If you want to move forward quickly, I can create the analysis script with educated guesses:
-- Use F5 for contract work (most common expense after F3/materials)
-- Use item codes 550-599 range for wages (typical operating expense range)
-- You can refine later after checking codebooks
-
-### Option B: Verify Codebooks First (Recommended)
-1. Open `ASI_Data/ASI_Info/f.Codelist24 (2).pdf`
-2. Look for entry describing "Contract and commission work" or "Work done by others"
-3. Note which F column number it corresponds to
-
-4. Open `ASUSE_Data/ASUSE_Info/NSS_ASUSE_23_24_Layout_mult_post (2)(3).xlsx`
-5. Find Block 5 sheet
-6. Look for item codes related to:
-   - "Emoluments to hired workers"
-   - "Number of hired workers"
-
-Tell me which option you prefer, or just tell me what you find in the codebooks!
-
----
-
-## What's Ready
-
-Once we have the item codes, I can immediately create:
-- Updated `Stage1_Analysis.r` with all correct mappings
-- State-industry aggregation logic
-- Proper reshaping for long-format blocks
-- All three regression models
-- Full documentation
-
-**Estimated time to create final script once we have the codes**: 15-20 minutes
+1.  **Job-Work Filtering**: Strictly filtered ASUSE/NSS to enterprises where "Contract manufacturing/Job work" = 1. This isolates the "Adverse Incorporation" segment.
+2.  **Productivity Calculation**: Formal productivity ($A_F$) is calculated as `Total_Output / L_total_workers` from ASI Blocks J and E.
+3.  **Outlier Handling**: Residual-based outlier detection identified 6 critical state-industry-year cells (e.g., Delhi/Gujarat NIC-14) that skewed results. These are excluded in robustness specifications.
+4.  **Weighting**: All aggregations use the survey-specific multipliers (`mlt` or `wgt`) to ensure state-level means are representative of the actual industrial population.
