@@ -20,7 +20,7 @@ library(ggplot2)
 library(patchwork)
 
 # Set working directory
-setwd("C:/Users/ashwin/Documents/Formal_Informal")
+# setwd("C:/Users/ashwin/Documents/Formal_Informal") # Removed for reproducibility
 
 # Load data - the long-run panel includes 2010, 2015, and 2021-24
 master_df <- read_csv("Output/csv/combined_longrun_df.csv", show_col_types = FALSE) %>%
@@ -198,16 +198,18 @@ step1 <- feols(
 )
 
 # Step 2: Outsourcing → Wages (controlling for productivity)
+# FIX: Run on full sample (was filter(has_outsourcing == 1) which selects on
+# the dependent variable of Step 1, inducing selection bias)
 step2 <- feols(
     ln_w_inf ~ ln_Q_out + ln_A_formal + E_s | NIC_2digit + Year,
-    data = master_df %>% filter(has_outsourcing == 1), # Only states with outsourcing
+    data = master_df,
     cluster = ~State_Code
 )
 
 # Step 3: Joint model
 step3 <- feols(
     ln_w_inf ~ ln_Q_out * ln_A_formal + E_s | NIC_2digit + Year,
-    data = master_df %>% filter(has_outsourcing == 1),
+    data = master_df,
     cluster = ~State_Code
 )
 
@@ -258,7 +260,7 @@ p1 <- ggplot(master_df, aes(x = exp(ln_A_formal), y = N_informal)) +
         color = "Industry",
         size = "N Formal Firms",
         caption = sprintf(
-            "N=%d state-industry cells. Positive slope suggests adverse incorporation.",
+            "N=%d state-industry cells. Negative slope contradicts simple adverse incorporation.",
             nrow(master_df)
         )
     ) +
@@ -272,17 +274,23 @@ p1 <- ggplot(master_df, aes(x = exp(ln_A_formal), y = N_informal)) +
 ggsave("Output/images/figure_adverse_incorporation.png", p1, width = 8, height = 6, dpi = 300)
 
 # Figure 2: Outsourcing → Wages (Cost-Shifting Test)
-p2 <- master_df %>%
-    filter(has_outsourcing == 1) %>%
-    ggplot(aes(x = ln_Q_out, y = ln_w_inf)) +
+# Compute partial residuals controlling for formal productivity
+cs_df <- master_df %>%
+    filter(has_outsourcing == 1, !is.na(ln_w_inf), !is.na(ln_Q_out), !is.na(ln_A_formal)) %>%
+    mutate(
+        w_inf_resid = residuals(lm(ln_w_inf ~ ln_A_formal, data = .)),
+        Q_out_resid = residuals(lm(ln_Q_out ~ ln_A_formal, data = .))
+    )
+
+p2 <- ggplot(cs_df, aes(x = Q_out_resid, y = w_inf_resid)) +
     geom_point(aes(color = E_s, size = N_informal), alpha = 0.7) +
     geom_smooth(method = "lm", se = TRUE, color = "black") +
     scale_color_viridis_c(option = "plasma") +
     labs(
         title = "Does Outsourcing Depress Informal Wages?",
-        subtitle = "Cost-Shifting Hypothesis (GVC Logic)",
-        x = "Log(Outsourcing Intensity)",
-        y = "Log(Informal Wage)",
+        subtitle = "Cost-Shifting Hypothesis (Partial Residuals)",
+        x = "Outsourcing Intensity (Residual, controlling for Productivity)",
+        y = "Informal Wage (Residual, controlling for Productivity)",
         color = "Enforcement",
         size = "N Informal",
         caption = "Only states with positive outsourcing shown. Negative slope suggests cost-shifting."
@@ -413,7 +421,7 @@ p_pe1 <- ggplot(plot_df, aes(x = ln_A_formal, y = ln_w_inf, color = Enforcement)
     scale_color_manual(values = c("High (Strong Institutions)" = "#2166ac", "Low (Weak Institutions)" = "#b2182b")) +
     labs(
         title = "Test 1: Monopsony and Productivity Pass-Through",
-        subtitle = "Informal wages remain stagnant regardless of state labor enforcement intensity",
+        subtitle = "Positive pass-through occurs, but does not significantly vary by enforcement",
         x = "Formal Sector Productivity (ln A_f)",
         y = "Informal Sector Wage (ln w_inf)",
         color = "State Enforcement"

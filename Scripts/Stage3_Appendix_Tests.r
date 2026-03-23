@@ -24,7 +24,7 @@ suppressPackageStartupMessages({
     library(patchwork)
 })
 
-setwd("C:/Users/ashwin/Documents/Formal_Informal")
+# setwd("C:/Users/ashwin/Documents/Formal_Informal") # Removed for reproducibility
 if (!dir.exists("Output")) dir.create("Output")
 
 cat("================================================================\n")
@@ -202,12 +202,12 @@ master_df_t5 <- master_df %>% filter(is.finite(ln_firm_size), N_firms > 0)
 cat(sprintf("Sample: %d observations\n\n", nrow(master_df_t5)))
 
 mod_size_outsourcing <- feols(
-    ln_Q_out ~ ln_firm_size * ln_A_formal + E_s | NIC_2digit,
+    ln_Q_out ~ ln_firm_size * ln_A_formal + E_s | NIC_2digit + Year,  # FIX: Added Year FE
     data = master_df_t5, cluster = ~State_Code
 )
 
 mod_size_wages <- feols(
-    ln_w_inf ~ ln_firm_size * ln_A_formal + E_s | NIC_2digit,
+    ln_w_inf ~ ln_firm_size * ln_A_formal + E_s | NIC_2digit + Year,  # FIX: Added Year FE
     data = master_df_t5, cluster = ~State_Code
 )
 
@@ -292,15 +292,21 @@ find_threshold_r2 <- function(data, threshold) {
             E_low = as.integer(E_s < threshold)
         )
     mod <- tryCatch(
-        feols(ln_w_inf ~ ln_A_formal:E_high + ln_A_formal:E_low + E_s | NIC_2digit,
+        feols(ln_w_inf ~ ln_A_formal:E_high + ln_A_formal:E_low + E_s | NIC_2digit + Year,
             data = data_t, cluster = ~State_Code
         ),
-        error = function(e) NULL
+        error = function(e) {
+            cat("  [DEBUG Error in feols Threshold ", threshold, "]: ", e$message, "\n", sep = "")
+            NULL
+        }
     )
     if (is.null(mod)) {
         return(NA_real_)
     }
-    as.numeric(tryCatch(r2(mod)["r2"], error = function(e) NA_real_))
+    as.numeric(tryCatch(r2(mod)["r2"], error = function(e) {
+        cat("  [DEBUG Error in r2 Threshold ", threshold, "]: ", e$message, "\n", sep = "")
+        NA_real_
+    }))
 }
 
 thresholds <- seq(0.05, 0.40, by = 0.05)
@@ -319,7 +325,7 @@ cat(sprintf("\n  Optimal threshold: E_s = %.2f (R² = %.4f)\n\n", optimal_thresh
 mod_threshold <- tryCatch(
     feols(
         ln_w_inf ~ ln_A_formal:as.integer(E_s >= optimal_threshold) +
-            ln_A_formal:as.integer(E_s < optimal_threshold) + E_s | NIC_2digit,
+            ln_A_formal:as.integer(E_s < optimal_threshold) + E_s | NIC_2digit + Year,
         data = master_df, cluster = ~State_Code
     ),
     error = function(e) {
@@ -380,12 +386,12 @@ master_df_t8 <- master_df %>% filter(is.finite(ln_concentration))
 cat(sprintf("Sample: %d observations\n\n", nrow(master_df_t8)))
 
 mod_concentration_simple <- feols(
-    ln_w_inf ~ ln_concentration + ln_A_formal + E_s | NIC_2digit,
+    ln_w_inf ~ ln_concentration + ln_A_formal + E_s | NIC_2digit + Year,  # FIX: Added Year FE
     data = master_df_t8, cluster = ~State_Code
 )
 
 mod_concentration <- feols(
-    ln_w_inf ~ ln_concentration * ln_A_formal + E_s | NIC_2digit,
+    ln_w_inf ~ ln_concentration * ln_A_formal + E_s | NIC_2digit + Year,  # FIX: Added Year FE
     data = master_df_t8, cluster = ~State_Code
 )
 
@@ -457,12 +463,20 @@ appendix_summary <- tibble(
     ),
     Coefficient = c(
         b_inc, b_dec, b_size_out, b_size_wage,
-        get_b(mod_threshold, "ln_A_formal:as.integer(E_s >= optimal_threshold)"),
+        tryCatch({
+            name <- paste0("ln_A_formal:as.integer(E_s >= ", optimal_threshold, ")")
+            if (optimal_threshold == 0.30) name <- "ln_A_formal:as.integer(E_s >= 0.3)"
+            coef(mod_threshold)[name][[1]]
+        }, error=function(e) NA_real_),
         b_conc
     ),
     P_value = c(
         NA, NA, p_size_out, p_size_wage,
-        get_p(mod_threshold, "ln_A_formal:as.integer(E_s >= optimal_threshold)"),
+        tryCatch({
+            name <- paste0("ln_A_formal:as.integer(E_s >= ", optimal_threshold, ")")
+            if (optimal_threshold == 0.30) name <- "ln_A_formal:as.integer(E_s >= 0.3)"
+            coeftable(mod_threshold)[name, "Pr(>|t|)"][[1]]
+        }, error=function(e) NA_real_),
         p_conc
     ),
     Structuralist_Prediction = c(

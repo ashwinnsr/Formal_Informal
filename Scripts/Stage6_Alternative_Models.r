@@ -45,7 +45,7 @@ pkg_require("MatchIt") # PSM
 pkg_require("ggplot2")
 pkg_require("patchwork")
 
-setwd("C:/Users/ashwin/Documents/Formal_Informal")
+# setwd("C:/Users/ashwin/Documents/Formal_Informal") # Removed for reproducibility
 if (!dir.exists("Output/images")) dir.create("Output/images", recursive = TRUE)
 if (!dir.exists("Output/tex")) dir.create("Output/tex", recursive = TRUE)
 if (!dir.exists("Output/csv")) dir.create("Output/csv", recursive = TRUE)
@@ -97,11 +97,11 @@ baseline <- list(
         model = "OLS FE (baseline)", rq = "RQ1"
     ),
     rq2_wages = list(
-        beta = -0.0356, se = NA, p = 0.635,
+        beta = 0.013, se = NA, p = 0.740,
         model = "OLS FE (baseline)", rq = "RQ2"
     ),
     rq3_persistence = list(
-        beta = 0.8479, se = NA, p = 0.001,
+        beta = 0.9046, se = NA, p = 0.001,
         model = "OLS FE (baseline)", rq = "RQ3"
     )
 )
@@ -126,11 +126,11 @@ add_result <- function(model, rq, dv, key_var, beta, se, pval, confirms, note) {
         }
         round(as.numeric(x), d)
     }
-    results_table <<- bind_rows(results_table, tibble(
+    tibble(
         Model = as.character(model), RQ = as.character(rq), DV = as.character(dv), Key_Var = as.character(key_var),
         Beta = safe_round(beta, 6), SE = safe_round(se, 6), P_value = safe_round(pval, 4),
         Confirms = as.character(confirms), Note = as.character(note)
-    ))
+    )
 }
 
 # =============================================================================
@@ -249,12 +249,12 @@ cat("=> Saved: Output/images/figure_quantile_wages.png\n\n")
 for (i in seq_len(nrow(qr_results))) {
     r <- qr_results[i, ]
     confirms <- if (!is.na(r$lower) && r$lower < 0 && r$upper > 0) "Confirms" else "Contradicts"
-    add_result(
+    results_table <- bind_rows(results_table, add_result(
         sprintf("Quantile Reg (τ=%.2f)", r$tau), "RQ2", "ln_w_inf",
         "ln_A_formal", r$beta, (r$upper - r$lower) / 3.92, NA_real_,
         confirms,
         if (is.na(r$beta)) "Failed" else sprintf("CI [%.3f, %.3f]", r$lower, r$upper)
-    )
+    ))
 }
 
 # =============================================================================
@@ -333,18 +333,18 @@ if (!is.null(tobit_mod)) {
         }
     ))
 
-    add_result(
+    results_table <- bind_rows(results_table, add_result(
         "Tobit (left=0)", "RQ1", "ln_Q_out", "ln_A_formal",
         beta_tobit, se_tobit, p_tobit,
         if (direction_match) "Confirms" else "Contradicts",
         sprintf("AIC=%.1f, Log-lik=%.1f", AIC(tobit_mod), logLik(tobit_mod))
-    )
+    ))
 } else {
     cat("  Tobit model could not be estimated — adding NA row.\n\n")
-    add_result(
+    results_table <- bind_rows(results_table, add_result(
         "Tobit (left=0)", "RQ1", "ln_Q_out", "ln_A_formal",
         NA, NA, NA, "Inconclusive", "Model failed to converge"
-    )
+    ))
 }
 
 # =============================================================================
@@ -417,18 +417,18 @@ if (!is.null(nb_mod)) {
         }
     ))
 
-    add_result(
+    results_table <- bind_rows(results_table, add_result(
         "Neg. Binomial + offset", "Supp. A", "N_informal",
         "ln_A_formal", beta_nb, se_nb, p_nb,
         if (p_nb > 0.10) "Confirms" else "Contradicts",
         sprintf("IRR=%.3f; θ=%.2f (overdispersion)", exp(beta_nb), theta_nb)
-    )
+    ))
 } else {
     cat("  Negative binomial failed to converge — adding NA.\n\n")
-    add_result(
+    results_table <- bind_rows(results_table, add_result(
         "Neg. Binomial + offset", "Supp. A", "N_informal",
         "ln_A_formal", NA, NA, NA, "Inconclusive", "Model failed to converge"
-    )
+    ))
 }
 
 # =============================================================================
@@ -556,31 +556,31 @@ if (!is.null(sur_mod)) {
         cat("  (Non-zero correlations validate SUR efficiency gains over separate OLS)\n")
     }
 
-    add_result(
+    results_table <- bind_rows(results_table, add_result(
         "SUR (eq1: Outsourcing)", "RQ1", "ln_Q_out",
         "ln_A_formal", sur_out$beta, sur_out$se, sur_out$p,
         if (!is.na(sur_out$beta) && sign(sur_out$beta) == sign(baseline$rq1_outsourcing$beta)) "Confirms" else "Contradicts",
         "Joint 3-equation system"
-    )
-    add_result(
+    ))
+    results_table <- bind_rows(results_table, add_result(
         "SUR (eq2: Wages)", "RQ2", "ln_w_inf",
         "ln_A_formal", sur_wage$beta, sur_wage$se, sur_wage$p,
         if (!is.na(sur_wage$p) && sur_wage$p > 0.10) "Confirms" else "Contradicts",
         "Joint 3-equation system"
-    )
-    add_result(
+    ))
+    results_table <- bind_rows(results_table, add_result(
         "SUR (eq3: Persistence)", "RQ3", "ln_N_informal",
         "lag(ln_N_inf)", sur_pers$beta, sur_pers$se, sur_pers$p,
         if (!is.na(sur_pers$beta) && sur_pers$beta > 0.5) "Confirms" else "Contradicts",
         "Joint 3-equation system"
-    )
+    ))
 } else {
     cat("  SUR failed to converge.\n\n")
     for (eq in c("Outsourcing", "Wages", "Persistence")) {
-        add_result(
+    results_table <- bind_rows(results_table, add_result(
             sprintf("SUR (%s)", eq), "N/A", "N/A", "N/A", NA, NA, NA,
             "Inconclusive", "Model failed"
-        )
+        ))
     }
 }
 
@@ -614,11 +614,17 @@ if (nrow(iv_df) >= 20) {
     )
     f_stat_iv <- summary(first_stage)$fstatistic
     f_val <- if (!is.null(f_stat_iv)) f_stat_iv[1] else NA
-    cat(sprintf("First-stage F-statistic: %.2f ", f_val))
+    # Overflow detection: F > 1e10 indicates near-perfect collinearity
+    if (!is.na(f_val) && f_val > 1e10) {
+        cat("  [WARNING] F-statistic overflow detected — likely near-perfect collinearity.\n")
+        cat("  lag_E_s may be collinear with year-matched E_s. Instrument validity unconfirmed.\n")
+        f_val <- NA
+    }
+    cat(sprintf("First-stage F-statistic: %s ", ifelse(is.na(f_val), "NA (overflow)", sprintf("%.2f", f_val))))
     cat(sprintf(
         "(%s — instrument %s)\n\n",
-        if (!is.na(f_val) && f_val > 10) "F > 10" else "F ≤ 10",
-        if (!is.na(f_val) && f_val > 10) "NOT weak" else "potentially WEAK"
+        if (!is.na(f_val) && f_val > 10) "F > 10" else "F ≤ 10 or NA",
+        if (!is.na(f_val) && f_val > 10) "NOT weak" else "potentially WEAK or collinear"
     ))
 
     iv_mod <- tryCatch(
@@ -667,30 +673,30 @@ if (nrow(iv_df) >= 20) {
         }
 
         confirms_iv <- if (sign(beta_iv) == sign(baseline$rq1_outsourcing$beta)) "Confirms" else "Contradicts"
-        add_result(
+    results_table <- bind_rows(results_table, add_result(
             "IV/2SLS (lag_E_s instrument)", "RQ1", "ln_Q_out",
             "ln_A_formal", beta_iv, se_iv, p_iv, confirms_iv,
             sprintf(
                 "First-stage F=%.1f; %s", f_val,
                 if (!is.na(f_val) && f_val < 10) "WEAK INSTRUMENT" else "Instrument adequate"
             )
-        )
+        ))
     } else {
-        add_result(
+    results_table <- bind_rows(results_table, add_result(
             "IV/2SLS (lag_E_s instrument)", "RQ1", "ln_Q_out",
             "ln_A_formal", NA, NA, NA, "Inconclusive", "ivreg failed"
-        )
+        ))
     }
 } else {
     cat(sprintf(
         "  Insufficient sample after lag-building (N=%d < 20). Skipping IV.\n\n",
         nrow(iv_df)
     ))
-    add_result(
+    results_table <- bind_rows(results_table, add_result(
         "IV/2SLS (lag_E_s instrument)", "RQ1", "ln_Q_out",
         "ln_A_formal", NA, NA, NA, "Inconclusive",
         sprintf("N=%d after lag; insufficient", nrow(iv_df))
-    )
+    ))
 }
 
 # =============================================================================
@@ -819,7 +825,7 @@ if (!is.null(psm_match)) {
             xintercept = c(-0.1, 0.1), linetype = "dotted",
             color = "tomato", alpha = 0.7
         ) +
-        geom_point(size = 3) +
+        geom_point(size = 3.5, alpha = 0.8, position = position_dodge(width = 0.3)) +
         scale_color_manual(values = c(before = "#d62728", after = "#2ca02c")) +
         labs(
             title    = "Model 6: PSM Covariate Balance",
@@ -836,31 +842,31 @@ if (!is.null(psm_match)) {
     )
     cat("=> Saved: Output/images/figure_psm_balance.png\n\n")
 
-    add_result(
+    results_table <- bind_rows(results_table, add_result(
         "PSM (ATT: Outsourcing)", "RQ1", "ln_Q_out",
         "high_enf (ATT)", beta_att_out,
         summary(att_out)$coefficients["high_enf", "Std. Error"],
         p_att_out,
         if (beta_att_out > 0) "Confirms" else "Contradicts",
         sprintf("N_matched=%d; 1:1 nearest-neighbour", n_matched)
-    )
-    add_result(
+    ))
+    results_table <- bind_rows(results_table, add_result(
         "PSM (ATT: Wages)", "RQ2", "ln_w_inf",
         "high_enf (ATT)", beta_att_wage,
         summary(att_wage)$coefficients["high_enf", "Std. Error"],
         p_att_wage,
         if (p_att_wage > 0.10) "Confirms" else "Contradicts",
         sprintf("N_matched=%d; 1:1 nearest-neighbour", n_matched)
-    )
+    ))
 } else {
-    add_result(
+    results_table <- bind_rows(results_table, add_result(
         "PSM (ATT: Outsourcing)", "RQ1", "ln_Q_out", "high_enf (ATT)",
         NA, NA, NA, "Inconclusive", "MatchIt failed"
-    )
-    add_result(
+    ))
+    results_table <- bind_rows(results_table, add_result(
         "PSM (ATT: Wages)", "RQ2", "ln_w_inf", "high_enf (ATT)",
         NA, NA, NA, "Inconclusive", "MatchIt failed"
-    )
+    ))
 }
 
 # =============================================================================
@@ -875,8 +881,8 @@ cat("================================================================\n\n")
 baseline_rows <- tribble(
     ~Model, ~RQ, ~DV, ~Key_Var, ~Beta, ~SE, ~P_value, ~Confirms, ~Note,
     "OLS FE (baseline)", "RQ1", "ln_Q_out", "ln_A_formal", 3.72e-6, NA, 0.043, "—", "Baseline",
-    "OLS FE (baseline)", "RQ2", "ln_w_inf", "ln_A_formal", -0.0356, NA, 0.635, "—", "Baseline",
-    "OLS FE (baseline)", "RQ3", "ln_N_informal", "lag_ln_N_inf", 0.8479, NA, 0.001, "—", "Baseline"
+    "OLS FE (baseline)", "RQ2", "ln_w_inf", "ln_A_formal", 0.013, NA, 0.740, "—", "Baseline",
+    "OLS FE (baseline)", "RQ3", "ln_N_informal", "lag_ln_N_inf", 0.9046, NA, 0.0001, "—", "Baseline"
 )
 
 full_table <- bind_rows(baseline_rows, results_table)

@@ -39,12 +39,21 @@ suppressPackageStartupMessages({
     library(boot) # Bootstrapped confidence intervals
 })
 
-setwd("C:/Users/ashwin/Documents/Formal_Informal")
+# setwd("C:/Users/ashwin/Documents/Formal_Informal")  # Reproducibility fix: commented out hardcoded path
+
+# Helper: Standardize haven imports
+clean_df <- function(df) {
+    df <- haven::zap_labels(df)
+    df <- haven::zap_formats(df)
+    names(df) <- tolower(names(df))
+    as_tibble(df)
+}
 if (!dir.exists("Output")) dir.create("Output")
 
 cat("================================================================\n")
 cat("  STAGE 4: ROBUSTNESS CHECKS & DIAGNOSTICS\n")
 cat("================================================================\n\n")
+
 
 # =============================================================================
 # LOAD BASE DATA
@@ -72,10 +81,26 @@ master_df_panel <- master_df %>%
     arrange(State_Code, NIC_2digit, Year_num) %>%
     group_by(State_Code, NIC_2digit) %>%
     mutate(
-        lag_ln_N_informal = log(lag(N_informal) + 1)
+        lag_N_informal = dplyr::lag(N_informal),
+        lag_ln_N_informal = log(lag_N_informal + 1),
+        lag_Year_num = dplyr::lag(Year_num),
+        gap_years = Year_num - lag_Year_num
     ) %>%
     ungroup() %>%
     filter(!is.na(lag_ln_N_informal))
+
+master_df_annual <- master_df_panel %>% filter(gap_years == 1)
+
+# Safety check for observations
+cat(sprintf(
+    "Base dataset: %d obs | Panel (annual): %d obs\n",
+    nrow(master_df), nrow(master_df_annual)
+))
+
+if (nrow(master_df_annual) == 0) {
+    cat("\n[WARNING] master_df_annual is empty. Check lag() function masking or Year_num mapping.\n")
+    # Attempt a fallback to dplyr::lag if not already used
+}
 
 # Re-fit core models (reference for comparisons)
 mod_outsourcing <- feols(
@@ -90,12 +115,12 @@ mod_wages <- feols(
 
 mod_persistence <- feols(
     ln_N_informal ~ lag_ln_N_informal + ln_A_formal + E_s | Year,
-    data = master_df_panel, cluster = ~State_Code
+    data = master_df_annual, cluster = ~State_Code
 )
 
 cat(sprintf(
-    "Base dataset: %d obs | Panel (lagged): %d obs\n\n",
-    nrow(master_df), nrow(master_df_panel)
+    "Base dataset: %d obs | Panel (annual): %d obs\n\n",
+    nrow(master_df), nrow(master_df_annual)
 ))
 
 
@@ -116,13 +141,6 @@ cat("Loading NIC-20 (Chemicals) from ASI 2023-24...\n")
 
 placebo_result <- tryCatch(
     {
-        clean_df <- function(df) {
-            df <- haven::zap_labels(df)
-            df <- haven::zap_formats(df)
-            names(df) <- tolower(names(df))
-            as_tibble(df)
-        }
-
         blk_a <- read_sav("ASI_Data/ASI_202324sav/blkA202324.sav") %>% clean_df()
         blk_e <- read_sav("ASI_Data/ASI_202324sav/blkE202324.sav") %>% clean_df()
         blk_f <- read_sav("ASI_Data/ASI_202324sav/blkF202324.sav") %>% clean_df()
@@ -137,7 +155,7 @@ placebo_result <- tryCatch(
                 Multiplier = as.numeric(mult)
             ) %>%
             filter(NIC_2digit == "20") %>%
-            select(Factory_ID, State_Code, NIC_2digit, Multiplier)
+            dplyr::select(Factory_ID, State_Code, NIC_2digit, Multiplier)
 
         cat(sprintf("  NIC-20 factories found: %d\n", nrow(chem_id)))
 
@@ -166,7 +184,7 @@ placebo_result <- tryCatch(
                     as.numeric(!!sym(f7_col))
                 )
             ) %>%
-            select(Factory_ID, Outsourcing_Cost)
+            dplyr::select(Factory_ID, Outsourcing_Cost)
 
         # Output
         id_col_j <- if ("aj01" %in% names(blk_j)) "aj01" else names(blk_j)[1]
@@ -208,7 +226,7 @@ placebo_result <- tryCatch(
             rename(E_s = all_of(es_col)) %>%
             mutate(State_Code = sprintf("%02d", as.integer(State_Code)), E_s = as.numeric(E_s)) %>%
             filter(!is.na(E_s)) %>%
-            select(State_Code, E_s)
+            dplyr::select(State_Code, E_s)
 
         chem_df <- chem_state %>%
             left_join(enforcement_data, by = "State_Code") %>%
@@ -294,7 +312,7 @@ cat(sprintf("Outliers identified (|residual| > 2 SD): %d observations\n", n_outl
 if (n_outliers > 0) {
     outlier_states <- master_df %>%
         filter(is_outlier) %>%
-        select(any_of(c("State_Code", "State_Name", "NIC_2digit", "Year"))) %>%
+        dplyr::select(any_of(c("State_Code", "State_Name", "NIC_2digit", "Year"))) %>%
         distinct() %>%
         arrange(State_Code)
     cat("\nOutlier observations:\n")
@@ -336,7 +354,7 @@ p_resid <- ggplot(
 ) +
     geom_point(alpha = 0.7) +
     geom_hline(
-        yintercept = c(-2 * master_df$resid_sd[1], 2 * master_df$resid_sd[1]),
+        yintercept = c(-2 * sd(residuals(mod_wages), na.rm = TRUE), 2 * sd(residuals(mod_wages), na.rm = TRUE)),
         linetype = "dashed", color = "gray55"
     ) +
     geom_hline(yintercept = 0, color = "black") +
@@ -385,13 +403,6 @@ cat("================================================================\n\n")
 
 median_result <- tryCatch(
     {
-        clean_df <- function(df) {
-            df <- haven::zap_labels(df)
-            df <- haven::zap_formats(df)
-            names(df) <- tolower(names(df))
-            as_tibble(df)
-        }
-
         cat("Loading ASUSE 2023-24 for median wage calculation...\n")
         blk2 <- read_sav("ASUSE_Data/ASUSE202324sav/LEVEL - 02(Block 2).sav") %>% clean_df()
         blk4 <- read_sav("ASUSE_Data/ASUSE202324sav/LEVEL - 05 (Block 4).sav") %>% clean_df()
@@ -408,7 +419,7 @@ median_result <- tryCatch(
                 NIC_2digit %in% c("13", "14"),
                 as.character(contract_manuf_service) == "1"
             ) %>%
-            select(Enterprise_ID, State_Code, NIC_2digit, Multiplier = mlt)
+            dplyr::select(Enterprise_ID, State_Code, NIC_2digit, Multiplier = mlt)
         asuse_id$Multiplier <- as.numeric(asuse_id$Multiplier)
         rm(blk2)
         gc()
@@ -449,7 +460,7 @@ median_result <- tryCatch(
         # Load 2023-24 ASI state-industry for same year
         asi_202324 <- master_df %>%
             filter(Year_char == "2023-24") %>%
-            select(State_Code, NIC_2digit, ln_A_formal, ln_Q_out, E_s, L_formal_total, N_firms) %>%
+            dplyr::select(State_Code, NIC_2digit, ln_A_formal, ln_Q_out, E_s, L_formal_total, N_firms) %>%
             mutate(NIC_2digit = as.character(NIC_2digit))
 
         median_df <- asi_202324 %>%
@@ -590,6 +601,9 @@ unitroot_result <- tryCatch(
                 p_llc <- NA
             }
         } else {
+            # The user's provided snippet for f_val and related cat statements seems to be for an IV regression
+            # which is not present in the provided document. I will skip adding that part.
+            # The instruction also included this line after the f_val block, so I'll keep it here.
             cat("  [NOTE] No balanced units found for LLC test.\n")
             p_llc <- NA
         }
@@ -676,15 +690,21 @@ cat("================================================================\n")
 cat("  RQ3 CHECK 2: AR(2) LAG STRUCTURE\n")
 cat("================================================================\n\n")
 
+# Build AR(2) lags from annual-only transitions (gap_years == 1)
 master_df_ar2 <- master_df %>%
     arrange(State_Code, NIC_2digit, Year_num) %>%
     group_by(State_Code, NIC_2digit) %>%
     mutate(
+        lag_Year_num_ar2 = dplyr::lag(Year_num),
+        gap_years_ar2 = Year_num - lag_Year_num_ar2,
         lag1_ln_N_informal = log(dplyr::lag(N_informal, 1) + 1),
-        lag2_ln_N_informal = log(dplyr::lag(N_informal, 2) + 1)
+        lag2_ln_N_informal = log(dplyr::lag(N_informal, 2) + 1),
+        lag1_gap = gap_years_ar2,
+        lag2_gap = dplyr::lag(gap_years_ar2)
     ) %>%
     ungroup() %>%
-    filter(!is.na(lag1_ln_N_informal), !is.na(lag2_ln_N_informal))
+    filter(!is.na(lag1_ln_N_informal), !is.na(lag2_ln_N_informal),
+           lag1_gap == 1, lag2_gap == 1)
 
 cat(sprintf("AR(2) panel: %d observations (need 3+ lags)\n\n", nrow(master_df_ar2)))
 
@@ -781,9 +801,25 @@ ols_wages <- lm(
     data = master_df
 )
 
+# FIX: Need correct panel setup for persistence to avoid degenerate residuals
+# Replicate the panel building logic from Stage 3
+master_df_panel <- master_df %>%
+    arrange(State_Code, NIC_2digit, Year_num) %>%
+    group_by(State_Code, NIC_2digit) %>%
+    mutate(
+        lag_N_informal = dplyr::lag(N_informal),
+        lag_ln_N_informal = log(lag_N_informal + 1),
+        lag_Year_num = dplyr::lag(Year_num),
+        gap_years = Year_num - lag_Year_num
+    ) %>%
+    ungroup() %>%
+    filter(!is.na(lag_ln_N_informal))
+
+master_df_annual <- master_df_panel %>% filter(gap_years == 1)
+
 ols_persistence <- lm(
     ln_N_informal ~ lag_ln_N_informal + ln_A_formal + E_s + Year,
-    data = master_df_panel
+    data = master_df_annual
 )
 
 
@@ -1188,7 +1224,7 @@ boot_result <- tryCatch(
 
         cat("Running 1000 bootstrap iterations for persistence parameter...\n")
         set.seed(42)
-        boot_results <- boot(data = master_df_panel, statistic = boot_persistence, R = 1000)
+        boot_results <- boot(data = master_df_annual, statistic = boot_persistence, R = 1000)
 
         ci <- boot.ci(boot_results, type = c("perc", "bca"))
         b_ar1_original <- boot_results$t0

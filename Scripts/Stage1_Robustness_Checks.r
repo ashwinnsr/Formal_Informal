@@ -53,7 +53,7 @@ asi_id <- asi_blk_a %>%
         Multiplier = mult
     ) %>%
     filter(NIC_2digit %in% c("13", "14")) %>%
-    select(Factory_ID, State_Code, NIC_2digit, Multiplier)
+    dplyr::select(Factory_ID, State_Code, NIC_2digit, Multiplier)
 
 cat(sprintf(
     "  %d textile/apparel factories across %d states\n",
@@ -73,7 +73,7 @@ asi_outsource <- asi_blk_f %>%
         Factory_ID = as.character(AF01),
         Outsourcing_Cost = ifelse(is.na(F7), 0, F7)
     ) %>%
-    select(Factory_ID, Outsourcing_Cost)
+    dplyr::select(Factory_ID, Outsourcing_Cost)
 
 # --- 1.5: Clean Block J (Output) ---
 asi_prod <- asi_blk_j %>%
@@ -131,17 +131,17 @@ asuse_id <- asuse_blk_2 %>%
         NIC_2digit %in% c("13", "14"),
         as.character(contract_manuf_service) == "1"
     ) %>%
-    select(Enterprise_ID, State_Code, NIC_2digit, Multiplier = mlt)
+    dplyr::select(Enterprise_ID, State_Code, NIC_2digit, Multiplier = mlt)
 
 asuse_workers <- asuse_blk_4 %>%
     mutate(Enterprise_ID = paste(fsu_serial_no, sample_est_no, sep = "_")) %>%
     filter(as.character(item_no) == "511") %>%
-    select(Enterprise_ID, Hired_Workers = value_rs)
+    dplyr::select(Enterprise_ID, Hired_Workers = value_rs)
 
 asuse_wages <- asuse_blk_5 %>%
     mutate(Enterprise_ID = paste(fsu_serial_no, sample_est_no, sep = "_")) %>%
     filter(as.character(item_no) == "559") %>%
-    select(Enterprise_ID, Total_Wages = value_rs)
+    dplyr::select(Enterprise_ID, Total_Wages = value_rs)
 
 asuse_workers_agg <- asuse_workers %>%
     group_by(Enterprise_ID) %>%
@@ -197,7 +197,7 @@ enforcement_data <- enforcement_raw %>%
         )
     ) %>%
     filter(!is.na(E_s)) %>%
-    select(State_Code, State_Name, E_s, E_s_alt)
+    dplyr::select(State_Code, State_Name, E_s, E_s_alt)
 
 cat(sprintf("  Loaded enforcement for %d states\n", nrow(enforcement_data)))
 cat(sprintf(

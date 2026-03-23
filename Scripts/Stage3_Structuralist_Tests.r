@@ -20,7 +20,7 @@ suppressPackageStartupMessages({
     library(patchwork)
 })
 
-setwd("C:/Users/ashwin/Documents/Formal_Informal")
+# setwd("C:/Users/ashwin/Documents/Formal_Informal") # Removed for reproducibility
 if (!dir.exists("Output")) dir.create("Output")
 
 cat("================================================================\n")
@@ -87,22 +87,34 @@ master_df_panel <- master_df %>%
     mutate(
         lag_N_informal = dplyr::lag(N_informal),
         lag_ln_N_informal = log(lag_N_informal + 1),
+        lag_Year_num = dplyr::lag(Year_num),
+        gap_years = Year_num - lag_Year_num,
         diff_ln_N_informal = ln_N_informal - lag_ln_N_informal,
         lag_diff_ln_N_informal = dplyr::lag(diff_ln_N_informal)
     ) %>%
     ungroup() %>%
     filter(!is.na(lag_ln_N_informal))
 
+# FIX: Separate annual transitions from multi-year transitions
+# The main AR(1) uses only annual transitions (gap = 1 year)
+# for an interpretable annual persistence parameter
+master_df_annual <- master_df_panel %>% filter(gap_years == 1)
+master_df_all_trans <- master_df_panel  # All transitions for supplementary model
+
 cat(sprintf(
-    "Persistence panel: %d observations (includes 2010→2015 and 2015→2021 transitions)\n\n",
+    "Persistence panel: %d total observations\n",
     nrow(master_df_panel)
 ))
+cat(sprintf(
+    "  Annual transitions (gap=1yr): %d | Multi-year transitions: %d\n\n",
+    nrow(master_df_annual), nrow(master_df_panel) - nrow(master_df_annual)
+))
 
-# Model 6a: Baseline persistence (AR1)
+# Model 6a: Baseline persistence (AR1) — ANNUAL TRANSITIONS ONLY
 mod_persistence_base <- tryCatch(
     feols(
         ln_N_informal ~ lag_ln_N_informal + ln_A_formal + E_s | Year,
-        data    = master_df_panel,
+        data    = master_df_annual,
         cluster = ~State_Code
     ),
     error = function(e) {
@@ -111,11 +123,24 @@ mod_persistence_base <- tryCatch(
     }
 )
 
-# Model 6b: Persistence with NIC fixed effects
+# Model 6a_all: Supplementary — ALL transitions with gap_years control
+mod_persistence_all <- tryCatch(
+    feols(
+        ln_N_informal ~ lag_ln_N_informal + ln_A_formal + E_s + gap_years | Year,
+        data    = master_df_all_trans,
+        cluster = ~State_Code
+    ),
+    error = function(e) {
+        cat("  [NOTE] All-transitions model failed:", conditionMessage(e), "\n")
+        NULL
+    }
+)
+
+# Model 6b: Persistence with NIC fixed effects — ANNUAL ONLY
 mod_persistence_nic <- tryCatch(
     feols(
         ln_N_informal ~ lag_ln_N_informal + ln_A_formal + E_s | NIC_2digit + Year,
-        data    = master_df_panel,
+        data    = master_df_annual,
         cluster = ~State_Code
     ),
     error = function(e) {
@@ -124,11 +149,11 @@ mod_persistence_nic <- tryCatch(
     }
 )
 
-# Model 6c: Controlling for formal employment (scale effects)
+# Model 6c: Controlling for formal employment (scale effects) — ANNUAL ONLY
 mod_persistence_scale <- tryCatch(
     feols(
         ln_N_informal ~ lag_ln_N_informal + ln_A_formal + ln_L_formal + E_s | NIC_2digit + Year,
-        data    = master_df_panel,
+        data    = master_df_annual,
         cluster = ~State_Code
     ),
     error = function(e) {
@@ -152,7 +177,8 @@ mod_persistence_fd <- tryCatch(
 
 cat("--- Regression Results ---\n")
 models_6 <- Filter(Negate(is.null), list(
-    "Base (Year FE)"       = mod_persistence_base,
+    "Annual AR(1)"         = mod_persistence_base,
+    "All Trans (w/ gap)"   = mod_persistence_all,
     "NIC+Year FE"          = mod_persistence_nic,
     "w/ Formal Employment" = mod_persistence_scale,
     "First-Difference"     = mod_persistence_fd
@@ -179,8 +205,8 @@ if (!is.null(mod_persistence_base)) {
         b_persist + 1.96 * se_persist
     ))
     cat(sprintf(
-        "  N observations: %d, clustered at %d states\n\n",
-        nrow(master_df_panel), length(unique(master_df_panel$State_Code))
+        "  N observations: %d (annual transitions only), clustered at %d states\n\n",
+        nrow(master_df_annual), length(unique(master_df_annual$State_Code))
     ))
 
     if (b_persist > 0.5 && p_persist < 0.05) {
@@ -257,8 +283,8 @@ persist_summary <- tibble(
     Coefficient = b_persist,
     SE = se_persist,
     P_value = p_persist,
-    N_obs = nrow(master_df_panel),
-    N_clusters = length(unique(master_df_panel$State_Code)),
+    N_obs = nrow(master_df_annual),
+    N_clusters = length(unique(master_df_annual$State_Code)),
     Interpretation = case_when(
         is.na(b_persist) ~ "Model failed",
         b_persist > 0.5 & p_persist < 0.05 ~ "Strong path dependence (structural)",
@@ -280,18 +306,18 @@ cat("Generating figures...\n")
 
 if (!is.null(mod_persistence_base) && !is.na(b_persist)) {
     # Figure 1: Lagged vs current N_informal
-    p6a <- ggplot(master_df_panel, aes(x = lag_ln_N_informal, y = ln_N_informal)) +
+    p6a <- ggplot(master_df_annual, aes(x = lag_ln_N_informal, y = ln_N_informal)) +
         geom_point(aes(color = as.factor(NIC_2digit), size = N_firms), alpha = 0.65) +
         geom_smooth(method = "lm", se = TRUE, color = "black", linewidth = 1) +
         geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray55", linewidth = 0.9) +
         annotate("text",
-            x = max(master_df_panel$lag_ln_N_informal, na.rm = TRUE) * 0.85,
-            y = max(master_df_panel$ln_N_informal, na.rm = TRUE) * 0.72,
+            x = max(master_df_annual$lag_ln_N_informal, na.rm = TRUE) * 0.85,
+            y = max(master_df_annual$ln_N_informal, na.rm = TRUE) * 0.72,
             label = "45° = full persistence", color = "gray45", size = 3.5
         ) +
         annotate("text",
-            x = min(master_df_panel$lag_ln_N_informal, na.rm = TRUE),
-            y = max(master_df_panel$ln_N_informal, na.rm = TRUE),
+            x = min(master_df_annual$lag_ln_N_informal, na.rm = TRUE),
+            y = max(master_df_annual$ln_N_informal, na.rm = TRUE),
             label = sprintf(
                 "β = %.2f (p %s)", b_persist,
                 ifelse(p_persist < 0.001, "< 0.001",

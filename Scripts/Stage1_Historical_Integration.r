@@ -23,7 +23,7 @@ suppressPackageStartupMessages({
     library(haven)
 })
 
-setwd("C:/Users/ashwin/Documents/Formal_Informal")
+# setwd("C:/Users/ashwin/Documents/Formal_Informal") # Removed for reproducibility
 if (!dir.exists("Output")) dir.create("Output")
 
 cat("================================================================\n")
@@ -101,12 +101,15 @@ load_enforcement <- function(path) {
             E_s = suppressWarnings(as.numeric(E_s))
         ) %>%
         filter(!is.na(E_s)) %>%
-        select(any_of(c("State_Code", "State_Name", "E_s")))
+        dplyr::select(tidyselect::any_of(c("State_Code", "State_Name", "E_s")))
 }
 
 enf <- list(
     "2010-11" = load_enforcement("Data/External/State-Enforcement_2010.csv"),
-    "2015-16" = load_enforcement("Data/External/State_Enforcement_2015.csv")
+    "2015-16" = load_enforcement("Data/External/State_Enforcement_2015.csv"),
+    "2021-22" = load_enforcement("Data/External/State_Enforcement_2021.csv"),
+    "2022-23" = load_enforcement("Data/External/State_Enforcement_2022.csv"),
+    "2023-24" = load_enforcement("Data/External/State_Enforcement_2023.csv")
 )
 
 # =============================================================================
@@ -187,9 +190,9 @@ load_asuse_2010 <- function() {
 
     # Block 1 & 2: ID, NIC, State, Job-work, Weights
     b12 <- clean_df(read_sav(paste0(DIR, "Block-1-Identification of sample enterprise-Records.sav"))) %>%
-        select(key_entpr, state, wgt_combined) %>%
+        dplyr::select(key_entpr, state, wgt_combined) %>%
         inner_join(clean_df(read_sav(paste0(DIR, "Block-2-particulars of operation and background information of enterprises-records.sav"))) %>%
-            select(key_entpr, nic_code = b2_q202, job_work = b2_q239), by = "key_entpr") %>%
+            dplyr::select(key_entpr, nic_code = b2_q202, job_work = b2_q239), by = "key_entpr") %>%
         filter(as.numeric(job_work) == 1) %>%
         mutate(NIC_2digit = substr(as.character(nic_code), 1, 2), State_Code = sprintf("%02d", as.integer(state))) %>%
         filter(NIC_2digit %in% TEXTILE_NIC)
@@ -203,7 +206,7 @@ load_asuse_2010 <- function() {
     # Block 12: Summary GVA (1209) and Comp (1201)
     b12_sum <- clean_df(read_sav(paste0(DIR, "Block-12-factor incomes-records.sav"))) %>%
         filter(as.numeric(b12_c2) %in% c(1201, 1209)) %>%
-        pivot_wider(id_cols = key_entpr, names_from = b12_c2, values_from = b12_c3, names_prefix = "item_") %>%
+        pivot_wider(id_cols = key_entpr, names_from = b12_c2, values_from = b12_c3, names_prefix = "item_", values_fn = sum) %>%
         rename(Total_Wages = item_1201, GVA = item_1209)
 
     b12 %>%
@@ -224,8 +227,8 @@ load_asuse_2015 <- function() {
 
     load_s <- function(p) {
         b12 <- clean_df(read_sav(paste0(DIR, p, "Block 1.sav"))) %>%
-            select(entid, state, mlt) %>%
-            inner_join(clean_df(read_sav(paste0(DIR, p, "Block 2.sav"))) %>% select(entid, nic_code = b2_q202, job_work = b2_q239), by = "entid") %>%
+            dplyr::select(entid, state, mlt) %>%
+            inner_join(clean_df(read_sav(paste0(DIR, p, "Block 2.sav"))) %>% dplyr::select(entid, nic_code = b2_q202, job_work = b2_q239), by = "entid") %>%
             filter(as.numeric(job_work) == 1) %>%
             mutate(NIC_2digit = substr(as.character(nic_code), 1, 2), State_Code = sprintf("%02d", as.integer(state))) %>%
             filter(NIC_2digit %in% TEXTILE_NIC)
@@ -236,7 +239,7 @@ load_asuse_2015 <- function() {
             summarise(Hired_Workers = sum(as.numeric(b8_q3) + as.numeric(b8_q4), na.rm = T), .groups = "drop")
 
         b15 <- clean_df(read_sav(paste0(DIR, gsub("- $", "-", p), "Block 15.sav"))) %>%
-            select(entid, Total_Wages = b15_q1502_3, GVA = b15_q1507_3)
+            dplyr::select(entid, Total_Wages = b15_q1502_3, GVA = b15_q1507_3)
 
         b12 %>%
             left_join(b8, by = "entid") %>%
@@ -290,27 +293,52 @@ if (file.exists("Output/csv/multiyear_master_df.csv")) {
     modern <- read_csv("Output/csv/multiyear_master_df.csv", show_col_types = FALSE) %>%
         mutate(
             Year_str = trimws(as.character(Year)),
-            defl_val = unlist(defl)[Year_str],
+            defl_val = vapply(Year_str, function(y) ifelse(!is.null(defl[[y]]), defl[[y]], NA_real_), numeric(1)),
             w_inf_real = w_inf_mean * defl_val,
             ln_w_inf_real = log(w_inf_real)
         )
 
+    # FIX: Replace stale 2023-only E_s with year-matched enforcement
+    # Drop old E_s from modern data, re-merge with year-specific enforcement
+    modern <- modern %>%
+        dplyr::select(-dplyr::any_of(c("E_s", "State_Name"))) %>%
+        mutate(Year_str = trimws(as.character(Year)))
+
+    # Re-attach year-matched enforcement for each modern year
+    modern_with_enf <- bind_rows(lapply(unique(modern$Year_str), function(yr) {
+        yr_enf <- enf[[yr]]
+        if (is.null(yr_enf)) {
+            cat(sprintf("  [WARN] No enforcement file for %s, skipping\n", yr))
+            return(NULL)
+        }
+        modern %>%
+            filter(Year_str == yr) %>%
+            left_join(yr_enf, by = "State_Code")
+    })) %>%
+        filter(!is.na(E_s))
+
+    if (isTRUE(getOption("MODERN_ASI_IN_THOUSANDS", FALSE))) {
+        modern_with_enf <- modern_with_enf %>% mutate(
+            A_formal = ifelse(Year %in% c("2021-22", "2022-23", "2023-24") & A_formal < 100000, A_formal * 1000, A_formal)
+        )
+    } else {
+        stopifnot(
+            "Check A_formal scale for 2021+ years (missing thousand multiplier?)" =
+                max(modern_with_enf$A_formal[as.character(modern_with_enf$Year) == "2021-22"], na.rm = TRUE) > 1000
+        )
+    }
+
     common <- c("State_Code", "State_Name", "NIC_2digit", "Year", "E_s", "A_formal", "w_for_mean", "Q_out_mean", "w_inf_real", "N_informal", "N_firms", "L_formal_total")
     longrun <- bind_rows(
-        hist_df %>% select(any_of(common)) %>% mutate(NIC_2digit = as.character(NIC_2digit)),
-        modern %>%
-            mutate(
-                # CRITICAL: Modern ASI (2021+) Output is in THOUSANDS in raw data
-                # If MultiYear script hasn't already multiplied, we do it here
-                A_formal = ifelse(Year %in% c("2021-22", "2022-23", "2023-24") & A_formal < 100000, A_formal * 1000, A_formal)
-            ) %>%
-            select(any_of(common)) %>%
+        hist_df %>% dplyr::select(any_of(common)) %>% mutate(NIC_2digit = as.character(NIC_2digit)),
+        modern_with_enf %>%
+            dplyr::select(dplyr::any_of(common)) %>%
             mutate(NIC_2digit = as.character(NIC_2digit))
     ) %>%
         mutate(
             Year = as.factor(Year),
             # Apply year-specific deflator to Productivity as well
-            defl_val = unlist(defl)[as.character(Year)],
+            defl_val = vapply(as.character(Year), function(y) ifelse(!is.null(defl[[y]]), defl[[y]], NA_real_), numeric(1)),
             A_formal_real = A_formal * defl_val,
             ln_w_inf = log(w_inf_real),
             ln_A_formal = log(A_formal_real),

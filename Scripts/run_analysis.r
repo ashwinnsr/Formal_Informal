@@ -5,7 +5,7 @@
 # Pipeline: 7 steps in execution order
 #
 # NOTE: Stage1_StateIndustry_Analysis.r and Stage1_MultiYear_Analysis.r
-#       are retained in the Scripts/ folder for reference but are NOT
+#       are retained in the  folder for reference but are NOT
 #       included here. The Historical Integration script (Step 1) creates
 #       the full long-run panel (2010-2024) used by all downstream stages.
 ################################################################################
@@ -13,6 +13,13 @@
 cat("================================================================\n")
 cat("   STARTING FULL ANALYSIS PIPELINE\n")
 cat("================================================================\n\n")
+
+# Reproducibility fix: Ensure working directory is project root
+if (!dir.exists("Scripts") && dir.exists("../Scripts")) {
+    setwd("..")
+    cat("Working directory set to project root:", getwd(), "\n")
+}
+if (!dir.exists("Scripts")) stop("Please run this script from the project root (Formal_Informal/)")
 
 # Step 1: Historical Integration — Full dataset creation (2010-2024)
 #   Creates: Output/csv/combined_longrun_df.csv
